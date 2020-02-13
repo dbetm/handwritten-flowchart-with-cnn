@@ -13,7 +13,7 @@ class Preproccesor(object):
     def open_image(self):
         root = Tk()
         root.config(width=0, height=0)
-        root.filename =  filedialog.askopenfilename(initialdir = "/home/wolfteinter/Escritorio",title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg"),("png files","*.png")))
+        root.filename =  filedialog.askopenfilename(title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg"),("png files","*.png")))
         self.image_path = str(root.filename)
         self.image = cv2.imread(self.image_path)
         root.destroy()
