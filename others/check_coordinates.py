@@ -5,7 +5,7 @@ dataset_path = "flowchart-3b"
 
 dataset = os.listdir(dataset_path)
 for class_i in dataset:
-    if(class_i == "arrow_rectangle_up"):
+    if(class_i == "arrow_rectangle_down"):
         type = os.listdir(dataset_path+"/"+str(class_i))
         for background in type:
             img_ann = os.listdir(dataset_path+"/"+str(class_i)+"/"+str(background))

@@ -42,6 +42,7 @@ def create_dataset_splitter():
     os.mkdir(dataset_name+"/validation"+"/arrow_rectangle_down");os.mkdir(dataset_name+"/validation"+"/arrow_rectangle_down/images");os.mkdir(dataset_name+"/validation"+"/arrow_rectangle_down/annots")
     os.mkdir(dataset_name+"/validation"+"/arrow_rectangle_left");os.mkdir(dataset_name+"/validation"+"/arrow_rectangle_left/images");os.mkdir(dataset_name+"/validation"+"/arrow_rectangle_left/annots")
 def move_archive(images,annots,path,class_i):
+    print("[OK]",class_i)
     global count
     images = sorted(images)
     annots = sorted(annots)
@@ -49,6 +50,7 @@ def move_archive(images,annots,path,class_i):
     num_files = len(images)
     #Calculate the number of files that should be moved to the training set
     num_split = int(num_files * split_tam / 100)
+    print()
     for i in range(num_split):
         pos = randint(0,len(images)-1)
         shutil.copy(path+"/images/"+str(images[pos]),training_set_path+"/"+class_i+"/images/"+str(count)+".jpg")
@@ -64,6 +66,7 @@ def move_archive(images,annots,path,class_i):
     for i in annots:
         shutil.copy(path+"/annots/"+str(i),validation_set_path+"/"+class_i+"/annots/"+str(count_aux)+".xml")
         count_aux = count_aux + 1
+    count = count_aux
 def generate():
     dataset = os.listdir(dataset_path)
     for class_i in dataset:
@@ -81,3 +84,4 @@ if __name__ == "__main__":
     split_tam = args.split
     create_dataset_splitter()
     generate()
+    print("Archives copy :",count*2)
