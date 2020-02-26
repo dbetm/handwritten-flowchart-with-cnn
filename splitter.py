@@ -2,12 +2,14 @@ import os
 import shutil
 import argparse
 from random import randint
-dataset_path = "flowchart-3b"
-training_set_path = "flowchart-3b(splitter)/train"
-validation_set_path = "flowchart-3b(splitter)/validation"
-dataset_name = "flowchart-3b(splitter)"
+
+dataset_path = "/home/david/datasets/flowchart-3b"
+training_set_path = "/home/david/datasets/flowchart-3b(splitter)/train"
+validation_set_path = "/home/david/datasets/flowchart-3b(splitter)/validation"
+dataset_name = "/home/david/datasets/flowchart-3b(splitter)"
 split_tam = 80
 count = 0
+
 def create_dataset_splitter():
     os.mkdir(dataset_name)
     os.mkdir(dataset_name+"/train")
