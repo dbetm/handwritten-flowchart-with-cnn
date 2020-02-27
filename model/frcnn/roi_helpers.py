@@ -117,7 +117,7 @@ class ROIHelpers(object):
 		X = np.array(x_roi)
 		Y1 = np.array(y_class_num)
 		Y2 = np.concatenate(
-			[np.array(y_class_regr_label),np.array(y_class_regr_coords)],
+			[np.array(y_class_regr_label), np.array(y_class_regr_coords)],
 			axis=1
 		)
 
@@ -151,7 +151,7 @@ class ROIHelpers(object):
 			return x, y, w, h
 
 	@staticmethod
-	def apply_regr(X, T):
+	def apply_regr_np(X, T):
 		"""Apply regression, calc rectangle tighter, passing numpy vectors."""
 		try:
 			x = X[0, :, :]
@@ -279,7 +279,7 @@ class ROIHelpers(object):
 				A[3, :, :, curr_layer] = anchor_y
 
 				if use_regr:
-					A[:, :, :, curr_layer] = apply_regr_np(
+					A[:, :, :, curr_layer] = ROIHelpers.apply_regr_np(
 						A[:, :, :, curr_layer],
 						regr
 					)

@@ -10,6 +10,7 @@ import numpy as np
 from optparse import OptionParser
 import pickle
 import logging
+import traceback
 
 from keras import backend as K
 from keras.optimizers import Adam, SGD, RMSprop
@@ -155,6 +156,7 @@ class Trainer(object):
 					pred_rpn = self.model_rpn.predict_on_batch(X)
 					# Convert RPN to ROI
 					roi_helper = ROIHelpers(self.config, overlap_thresh=0.9, max_boxes=300)
+
 					roi = roi_helper.convert_rpn_to_roi(
 						pred_rpn[0],
 						pred_rpn[1],
@@ -164,7 +166,7 @@ class Trainer(object):
 					# note: calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
 					X2, Y1, Y2, ious = roi_helper.calc_iou(
 						roi,
-						self.all_data,
+						img_data,
 						self.class_mapping
 					)
 
@@ -176,7 +178,8 @@ class Trainer(object):
 					# Get negatives samples and positive samples (IoU > thresh)
 					neg_samples = np.where(Y1[0, :, -1] == 1)
 					pos_samples = np.where(Y1[0, :, -1] == 0)
-					neg_sample, pos_samples = self.__validate_samples(
+
+					neg_samples, pos_samples = self.__validate_samples(
 						neg_samples,
 						pos_samples
 					)
@@ -188,9 +191,9 @@ class Trainer(object):
 					sel_samples = self.__select_samples(neg_samples, pos_samples)
 
 					# Update losses, for class detector and RPN
-					self.__update_losses(sel_samples, iter_num, loss_rpn)
+					self.__update_losses(sel_samples, iter_num, loss_rpn, X, X2, Y1, Y2)
 					# Update progress bar in an epoch
-					progbar.update(
+					progress_bar.update(
 						iter_num+1,
 						[
 							('rpn_cls', self.losses[iter_num, 0]),
@@ -202,7 +205,6 @@ class Trainer(object):
 
 					iter_num += 1
 
-					logging.debug("All is well")
 					# If the epoch actual is completed
 					if iter_num == self.config.epoch_length:
 						best_loss = self.__update_losses_in_epoch(best_loss, start_time)
@@ -210,9 +212,10 @@ class Trainer(object):
 						break
 
 				except Exception as e:
+					#traceback.print_exc()
 					print('Exception: {}'.format(e))
-					#continue
-					break
+					continue
+					#break
 
 		print('Training complete, exiting :p.')
 
@@ -280,7 +283,7 @@ class Trainer(object):
 			loss=[
 				LossesCalculator.rpn_loss_cls(),
 				LossesCalculator.rpn_loss_regr()
-			],
+			]
 		)
 		logging.debug("Compile model_classifier") # DEBUG
 		self.model_classifier.compile(
@@ -311,7 +314,7 @@ class Trainer(object):
 			print("Weights can be found in the keras application folder \
 				https://github.com/fchollet/keras/tree/master/keras/applications")
 
-	def __print_average_bbxes():
+	def __print_average_bbxes(self):
 		"""Show the average number of overlapping bboxes."""
 		sum = sum(self.rpn_accuracy_rpn_monitor)
 		mean_overlapping_bboxes = float(sum) / len(self.rpn_accuracy_rpn_monitor)
@@ -334,7 +337,7 @@ class Trainer(object):
 		else:
 			pos_samples = []
 
-		return neg_samples, pos_samples
+		return (neg_samples, pos_samples)
 
 	def __select_samples(self, neg_samples, pos_samples):
 		if self.config.num_rois > 1:
@@ -348,8 +351,8 @@ class Trainer(object):
 				).tolist()
 			try:
 				selected_neg_samples = np.random.choice(
-					neg_samples,
-					self.config.num_rois - len(selected_pos_samples),
+					a=neg_samples,
+					size=self.config.num_rois - len(selected_pos_samples),
 					replace=False
 				).tolist()
 			except:
@@ -358,8 +361,8 @@ class Trainer(object):
 				the value False).
 				"""
 				selected_neg_samples = np.random.choice(
-					neg_samples,
-					self.config.num_rois - len(selected_pos_samples),
+					a=neg_samples,
+					size=self.config.num_rois - len(selected_pos_samples),
 					replace=True
 				).tolist()
 
@@ -376,7 +379,7 @@ class Trainer(object):
 
 		return sel_samples
 
-	def __update_losses(self, sel_samples, iter_num, loss_rpn):
+	def __update_losses(self, sel_samples, iter_num, loss_rpn, X, X2, Y1, Y2):
 		loss_class = self.model_classifier.train_on_batch(
 			[X, X2[:, sel_samples, :]],
 			[Y1[:, sel_samples, :], Y2[:, sel_samples, :]]

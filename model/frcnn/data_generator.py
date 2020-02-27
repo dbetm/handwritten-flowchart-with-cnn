@@ -8,6 +8,7 @@ import random
 import copy
 import threading
 import itertools
+import traceback
 
 from . data_augment import DataAugment
 from . utilities.image_tools import ImageTools
@@ -138,7 +139,7 @@ class Utils(object):
 		best_x_for_bbox = np.zeros((num_bboxes, 4)).astype(int)
 		best_dx_for_bbox = np.zeros((num_bboxes, 4)).astype(np.float32)
 
-		gta = Utils._Utils_get_GT_box_coordinates(
+		gta = Utils.get_GT_box_coordinates(
 			data,
 			num_bboxes,
 			width,
@@ -146,20 +147,21 @@ class Utils(object):
 			new_width,
 			new_height
 		)
-		ans = Utils._Utils_get_RPN_ground_truth(
-			config, anchor_sizes, n_anchratios, output_width, output_height,
-			new_width, new_height, downscale, num_bboxes, gta, data,
-			y_rpn_overlap, y_is_box_valid, y_rpn_regr, num_anchors_for_bbox,
+		# print("Antes de calcular RPN GT")
+		ans = Utils.get_RPN_ground_truth(
+			config, anchor_sizes, anchor_ratios, n_anchratios, output_width,
+			output_height, new_width, new_height, downscale, num_bboxes, gta,
+			data, y_rpn_overlap, y_is_box_valid, y_rpn_regr, num_anchors_for_bbox,
 			best_anchor_for_bbox, best_iou_for_bbox, best_x_for_bbox,
 			best_dx_for_bbox
 		)
 		y_rpn_overlap, y_is_box_valid, y_rpn_regr = ans[0]
 		num_anchors_for_bbox, best_anchor_for_bbox, best_iou_for_bbox, best_x_for_bbox, best_dx_for_bbox = ans[1]
-
 		# We ensure that every bbox has at least one positive RPN region
-		ans = Utils._Utils_ensure_least_one_pos_RPN(
+		ans = Utils.ensure_least_one_pos_RPN(
 			y_rpn_overlap, y_is_box_valid, y_rpn_regr,
-			num_anchors_for_bbox, best_anchor_for_bbox, n_anchratios
+			num_anchors_for_bbox, best_anchor_for_bbox, n_anchratios,
+			best_dx_for_bbox
 		)
 		# Recovery items of list
 		y_rpn_overlap, y_is_box_valid, y_rpn_regr = ans
@@ -194,14 +196,14 @@ class Utils(object):
 		return np.copy(y_rpn_cls), np.copy(y_rpn_regr)
 
 	@staticmethod
-	def __get_GT_box_coordinates(
+	def get_GT_box_coordinates(
 		data,
 		num_bboxes,
 		width,
 		height,
 		new_width,
 		new_height
-	):
+		):
 		"""Get the GT box coordinates, and resize to account for
 		image resizing
 		"""
@@ -217,11 +219,13 @@ class Utils(object):
 		return gta
 
 	@staticmethod
-	def __get_RPN_ground_truth(config, anchor_sizes, n_anchratios, output_width,
-		output_height, new_width, new_height, downscale, num_bboxes, gta,
-		data, y_rpn_overlap, y_is_box_valid, y_rpn_regr, num_anchors_for_bbox,
-		best_anchor_for_bbox, best_iou_for_bbox, best_x_for_bbox, best_dx_for_bbox):
+	def get_RPN_ground_truth(config, anchor_sizes, anchor_ratios, n_anchratios,
+		output_width, output_height, new_width, new_height, downscale,
+		num_bboxes, gta, data, y_rpn_overlap, y_is_box_valid, y_rpn_regr,
+		num_anchors_for_bbox, best_anchor_for_bbox, best_iou_for_bbox,
+		best_x_for_bbox, best_dx_for_bbox):
 		"""RPN Ground Truth"""
+
 		for anchor_size_idx in range(len(anchor_sizes)):
 			for anchor_ratio_idx in range(n_anchratios):
 				anchor_x = anchor_sizes[anchor_size_idx]
@@ -236,7 +240,6 @@ class Utils(object):
 					# ignore boxes that go across image boundaries
 					if x1_anc < 0 or x2_anc > new_width:
 						continue
-
 					for jy in range(output_height):
 						# y-coordinates of the current anchor box
 						y1_anc = downscale * (jy + 0.5) - anchor_y / 2
@@ -244,7 +247,6 @@ class Utils(object):
 						# ignore boxes that go across image boundaries
 						if y1_anc < 0 or y2_anc > new_height:
 							continue
-
 						# bbox_type indicates an anchor probably target
 						# default isn't target (negative)
 						bbox_type = 'neg'
@@ -255,7 +257,7 @@ class Utils(object):
 						best_iou_for_loc = 0.0
 						for bbox_num in range(num_bboxes):
 							# get IOU of the current GT box and the current anchor box
-							curr_iou = iou(
+							curr_iou = Metrics.iou(
 											[gta[bbox_num, 0], gta[bbox_num, 2], gta[bbox_num, 1], gta[bbox_num, 3]],
 											[x1_anc, y1_anc, x2_anc, y2_anc]
 										)
@@ -267,7 +269,6 @@ class Utils(object):
 								cy = (gta[bbox_num, 2] + gta[bbox_num, 3]) / 2.0
 								cxa = (x1_anc + x2_anc) / 2.0
 								cya = (y1_anc + y2_anc) / 2.0
-
 								tx = (cx - cxa) / (x2_anc - x1_anc)
 								ty = (cy - cya) / (y2_anc - y1_anc)
 								div = x2_anc - x1_anc
@@ -280,9 +281,7 @@ class Utils(object):
 								box, so we keep track of which anchor box was best
 								"""
 								if curr_iou > best_iou_for_bbox[bbox_num]:
-									best_anchor_for_bbox[bbox_num] = [jy, ix]
-									best_anchor_for_bbox[bbox_num].append()
-									best_anchor_for_bbox[bbox_num].append(anchor_size_idx)
+									best_anchor_for_bbox[bbox_num] = [jy, ix, anchor_ratio_idx, anchor_size_idx]
 
 									best_iou_for_bbox[bbox_num] = curr_iou
 									best_x_for_bbox[bbox_num,:] = [x1_anc, x2_anc, y1_anc, y2_anc]
@@ -309,7 +308,6 @@ class Utils(object):
 									# gray zone between neg and pos
 									if bbox_type != 'pos':
 										bbox_type = 'neutral'
-
 						cond1 = bbox_type == 'neg' or bbox_type == 'pos'
 						cond2 = bbox_type == 'pos'
 						# turn on or off outputs depending on IoUs
@@ -323,8 +321,8 @@ class Utils(object):
 		return [aux1, aux2]
 
 	@staticmethod
-	def __ensure_least_one_pos_RPN(y_rpn_overlap, y_is_box_valid, y_rpn_regr,
-		num_anchors_for_bbox, best_anchor_for_bbox, n_anchratios):
+	def ensure_least_one_pos_RPN(y_rpn_overlap, y_is_box_valid, y_rpn_regr,
+		num_anchors_for_bbox, best_anchor_for_bbox, n_anchratios, best_dx_for_bbox):
 		"""We ensure that every bbox has at least one positive RPN region"""
 		for idx in range(num_anchors_for_bbox.shape[0]):
 			if num_anchors_for_bbox[idx] == 0:
@@ -358,8 +356,9 @@ class Utils(object):
 
 		sample_selector = SampleSelector(class_count)
 		data_augment_img = DataAugment(config)
-
+		cont = 1
 		while True:
+			print(cont)
 			if mode == 'train':
 				# Randomize all image data
 				np.random.shuffle(all_data)
@@ -408,15 +407,17 @@ class Utils(object):
 							new_width, new_height,
 							img_len_calc_func
 						)
-					except:
+					except Exception as e:
+						print("L2 get_anchor_gt", e)
+						# traceback.print_exc()
 						continue
 
 					# Zero-center by mean pixel, and preprocess image
 					x_img = x_img[:,:, (2, 1, 0)]  # BGR -> RGB
 					x_img = x_img.astype(np.float32)
-					x_img[:, :, 0] -= C.img_channel_mean[0]
-					x_img[:, :, 1] -= C.img_channel_mean[1]
-					x_img[:, :, 2] -= C.img_channel_mean[2]
+					x_img[:, :, 0] -= config.img_channel_mean[0]
+					x_img[:, :, 1] -= config.img_channel_mean[1]
+					x_img[:, :, 2] -= config.img_channel_mean[2]
 					x_img /= config.img_scaling_factor
 
 					x_img = np.transpose(x_img, (2, 0, 1))
@@ -431,5 +432,6 @@ class Utils(object):
 					yield np.copy(x_img), [np.copy(y_rpn_cls), np.copy(y_rpn_regr)], img_data_aug
 
 				except Exception as e:
-					print(e)
+					print("L1 get_anchor_gt", e)
 					continue
+				cont += 1

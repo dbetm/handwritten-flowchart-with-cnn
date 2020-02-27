@@ -20,7 +20,7 @@ class DataAugment(object):
 		self.__verify_data(img_data)
 		# Copy the data
 		img_data_aug = copy.deepcopy(img_data)
-		logging.debug(img_data_aug['filepath'])
+		# logging.debug(img_data_aug['filepath'])
 		# Get the image from images folder
 		img = cv2.imread(img_data_aug['filepath'])
 
