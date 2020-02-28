@@ -91,14 +91,19 @@ class Trainer(object):
 		# Tensor for image in TensorFlow
 		self.input_shape_image = (None, None, 3)
 
-	def recover_data(self, input_path):
+	def recover_data(
+		self,
+		dataset_path,
+		annotate_path="frcnn/utilities/annotate.txt",
+		generate_annotate=False
+		):
 		"""Recover data from annotate file or create annotate file from dataset.
 		"""
 		self.parser = Parser(
-			input_path,
-			annotate_path="frcnn/utilities/annotate.txt"
+			dataset_path=dataset_path,
+			annotate_path=annotate_path
 		)
-		ans = self.parser.get_data(generate_annotate=False)
+		ans = self.parser.get_data(generate_annotate=generate_annotate)
 		self.all_data, self.classes_count, self.class_mapping = ans
 		# If bg was not added, it will be added to the data image dictionaries.
 		if 'bg' not in self.classes_count:
@@ -427,8 +432,13 @@ class Trainer(object):
 
 if __name__ == '__main__':
 	trainer = Trainer()
-	input_path_weights = "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
-	trainer.recover_data("/home/david/datasets/flowchart-3b(splitter)")
-	trainer.configure(False, False, "model_frcnn_v0.hdf5", 32, input_path_weights)
+	weights_input_path = "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
+	path_dataset = "/home/david/datasets/flowchart-3b(splitter)"
+	trainer.recover_data(
+		path_dataset,
+		generate_annotate=False,
+		annotate_path="frcnn/utilities/annotate.txt"
+	)
+	trainer.configure(False, False, "model_frcnn_v0.hdf5", 32, weights_input_path)
 	trainer.save_config("config.pickle")
 	trainer.train(learning_rate=1e-5)

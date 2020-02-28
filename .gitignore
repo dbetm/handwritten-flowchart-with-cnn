@@ -134,3 +134,6 @@ dmypy.json
 
 # Config files for deep learning model
 *.pickle
+
+# Annotate file
+annotate.txt

@@ -12,9 +12,9 @@ class Parser(object):
 	from dataset.
 	"""
 
-	def __init__(self, input_path, annotate_path="annotate.txt"):
+	def __init__(self, dataset_path, annotate_path="annotate.txt"):
 		super(Parser, self).__init__()
-		self.input_path = input_path
+		self.dataset_path = dataset_path
 		self.annotate_path = annotate_path
 		# Dictionaries for save the data
 		self.all_imgs = {}
@@ -29,7 +29,7 @@ class Parser(object):
 			self.__generate_annotate()
 
 		with open(self.annotate_path, 'r') as f:
-			print('Parsing annotation files...')
+			print('Parsing annotation file...')
 			for line in f:
 				self.__read_line(line)
 			all_data = []
@@ -87,23 +87,25 @@ class Parser(object):
 		self.all_imgs[filename]['bboxes'].append(new_image_data)
 
 	def __generate_annotate(self):
-		"""Docs"""
-		train_path = self.input_path + "/train"
-		test_path = self.input_path + "/validation"
+		"""Generate annotation file from dataset."""
+		print("Generating annots file...")
+
+		train_path = self.dataset_path + "/train"
+		test_path = self.dataset_path + "/validation"
 
 		data = self.__collect_data(train_path, test=False, data=[])
 		data = self.__collect_data(test_path, test=True, data=data)
 
 		data = pd.DataFrame(data)
-		data.to_csv('annotate.txt', header=None, index=None, sep=',')
+		data.to_csv(self.annotate_path, header=None, index=None, sep=',')
 
 	def __collect_data(self, path, test=False, data=[]):
 		if(test):
 			type = 1
-			base_path = self.input_path + "/validation/"
+			base_path = self.dataset_path + "/validation/"
 		else:
 			type = 0
-			base_path = self.input_path + "/train/"
+			base_path = self.dataset_path + "/train/"
 		path_dataset = os.listdir(path)
 		for class_i in path_dataset:
 			items_path = path + "/" + class_i + "/annots"
@@ -131,9 +133,12 @@ class Parser(object):
 		return int(num)
 
 if __name__ == '__main__':
-	simple_parser = Parser("/home/david/datasets/flowchart-3b(splitter")
+	simple_parser = Parser(
+		dataset_path="/home/david/datasets/flowchart-3b(splitter)",
+		annotate_path="annotate2.txt"
+	)
 	all_data, classes_count, class_mapping = simple_parser.get_data(
-		generate_annotate=False
+		generate_annotate=True
 	)
 	print(all_data)
 	print("-"*35)
