@@ -27,11 +27,11 @@ from frcnn.utilities.parser import Parser
 class Trainer(object):
 	"""Setup training and run for some epochs."""
 
-	def __init__(self):
+	def __init__(self, use_gpu=False):
 		super(Trainer, self).__init__()
 
 		self.config = Config()
-		self.__setup()
+		self.config.use_gpu = use_gpu
 		self.parser = None
 		self.all_data = []
 		self.classes_count = []
@@ -58,11 +58,21 @@ class Trainer(object):
 		self.losses = None
 		self.rpn_accuracy_rpn_monitor = None
 		self.rpn_accuracy_for_epoch = None
+		# System and session setup
+		self.__setup()
 
 	def __setup(self):
 		"""System and session, setup."""
 		sys.setrecursionlimit(40000)
 		logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+		if(self.config.use_gpu):
+			config_gpu = tf.compat.v1.ConfigProto()
+			# dynamically grow the memory used on the GPU
+			config_gpu.gpu_options.allow_growth = True
+			# to log device placement (on which device the operation ran)
+			config_gpu.log_device_placement = True
+			sess = tf.compat.v1.Session(config=config_gpu)
+			set_session(sess)
 
 	def configure(
 			self,
@@ -160,7 +170,7 @@ class Trainer(object):
 					# If an epoch is completed + allowed verbose, then:
 					# print the average number of overlapping bboxes.
 					len_rpn_acc_rpn_moni = len(self.rpn_accuracy_rpn_monitor)
-					cond1 = len_rpn_acc_rpn_moni == self.config.epoch_length
+					cond1 = (len_rpn_acc_rpn_moni == self.config.epoch_length)
 					if cond1 and self.config.verbose:
 						self.__print_average_bbxes()
 
@@ -327,10 +337,10 @@ class Trainer(object):
 		"""Load weights from a pretrained model."""
 
 		try:
-			print('Loading weights from {}'.format(self.config.base_net_weights))
-			self.model_rpn.load_weights(self.config.base_net_weights, by_name=True)
+			print('Loading weights from {}'.format(self.config.weights_input_path))
+			self.model_rpn.load_weights(self.config.weights_input_path, by_name=True)
 			self.model_classifier.load_weights(
-				self.config.base_net_weights,
+				self.config.weights_input_path,
 				by_name=True
 			)
 		except Exception as e:
@@ -465,7 +475,7 @@ class Trainer(object):
 				print(message.format(best_loss, curr_loss))
 			best_loss = curr_loss
 			# Save the best model
-			self.model_all.save_weights(self.config.model_path)
+			self.model_all.save_weights(self.config.weights_output_path)
 
 		return best_loss
 
@@ -483,7 +493,8 @@ if __name__ == '__main__':
 		vertical_flips=False,
 		num_rois=32,
 		weights_output_path="model_frcnn_v0.hdf5",
-		weights_input_path=weights_input_path
+		weights_input_path=weights_input_path,
+		num_epochs=5
 	)
 	trainer.save_config("config.pickle")
 	trainer.train(learning_rate=1e-5)

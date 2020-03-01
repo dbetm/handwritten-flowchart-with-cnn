@@ -16,6 +16,7 @@ class Config:
 		self.num_epochs = 5
 		self.epoch_length = 32
 		self.learning_rate = 0.001
+		self.use_gpu = False
 		# anchor box scales
 		self.anchor_box_scales = [128, 256, 512]
 		# anchor box ratios
