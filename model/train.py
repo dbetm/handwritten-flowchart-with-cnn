@@ -9,6 +9,7 @@ from optparse import OptionParser
 import pickle
 import logging
 import traceback
+import tensorflow as tf
 
 from keras import backend as K
 from keras.optimizers import Adam, SGD, RMSprop
@@ -72,7 +73,6 @@ class Trainer(object):
 			# to log device placement (on which device the operation ran)
 			config_gpu.log_device_placement = True
 			sess = tf.compat.v1.Session(config=config_gpu)
-			set_session(sess)
 
 	def configure(
 			self,
