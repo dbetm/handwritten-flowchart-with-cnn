@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 
 class ImageTools(object):
 	"""Methods for get required format to the images."""
@@ -10,6 +10,7 @@ class ImageTools(object):
 	@staticmethod
 	def get_new_img_size(width, height, img_min_side=600):
 		"""Resize the image, based on a minimum side."""
+
 		if width <= height:
 			f = float(img_min_side) / width
 			new_height = int(f * height)

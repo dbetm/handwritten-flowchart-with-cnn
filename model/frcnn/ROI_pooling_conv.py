@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
 from keras.engine.topology import Layer
 import keras.backend as K
+
 
 class ROIPoolingConv(Layer):
     """ROI pooling layer for 2D inputs.
@@ -79,7 +79,3 @@ class ROIPoolingConv(Layer):
         final_output = K.permute_dimensions(final_output, (0, 1, 2, 3, 4))
 
         return final_output
-
-
-# if __name__ == '__main__':
-#     roi_pooling_conv = ROIPoolingConv(7, 15)

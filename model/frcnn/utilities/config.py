@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import math
+
 
 class Config:
 	"""Save the parameters for training process"""
@@ -15,6 +15,7 @@ class Config:
 		# training
 		self.num_epochs = 5
 		self.epoch_length = 32
+		self.learning_rate = 0.001
 		# anchor box scales
 		self.anchor_box_scales = [128, 256, 512]
 		# anchor box ratios

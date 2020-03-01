@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
@@ -23,35 +22,41 @@ class Metrics(object):
 	@staticmethod
 	def union(au, bu, area_intersection):
 		"""Calculate total area between two rectangles."""
-		area_a = (au[2] - au[0]) * (au[3] - au[1])
-		area_b = (bu[2] - bu[0]) * (bu[3] - bu[1])
+
+		area_a = (au[2]-au[0]) * (au[3]-au[1])
+		area_b = (bu[2]-bu[0]) * (bu[3]-bu[1])
 		area_union = area_a + area_b - area_intersection
 		return area_union
 
 	@staticmethod
 	def intersection(ai, bi):
 		"""Calculate shared total area between two rectangles."""
+
 		x = max(ai[0], bi[0])
 		y = max(ai[1], bi[1])
 		w = min(ai[2], bi[2]) - x
 		h = min(ai[3], bi[3]) - y
+
 		if w < 0 or h < 0:
 			return 0
 		return w * h
 
 	@staticmethod
 	def iou(a, b):
-		"""Calculate metric Intersection over Union"""
+		"""Calculate metric Intersection over Union."""
+
 		# a and b should be (x1,y1,x2,y2)
 		if a[0] >= a[2] or a[1] >= a[3] or b[0] >= b[2] or b[1] >= b[3]:
 			return 0.0
 		area_i = Metrics.intersection(a, b)
 		area_u = Metrics.union(a, b, area_i)
 
-		return float(area_i) / float(area_u + 1e-6)
+		return float(area_i) / float(area_u+1e-6)
 
 
 class SampleSelector:
+	"""Selector of instances."""
+
 	def __init__(self, class_count):
 		# ignore classes that have zero samples
 		self.classes = [b for b in class_count.keys() if class_count[b] > 0]
@@ -62,6 +67,7 @@ class SampleSelector:
 
 	def skip_sample_for_balanced_class(self, img_data):
 		"""Skip an instance to balance the number of classes."""
+
 		class_in_img = False
 
 		for bbox in img_data['bboxes']:
@@ -82,6 +88,7 @@ class Threadsafe_iter:
 	"""Takes an iterator/generator and makes it thread-safe by
 	serializing call to the `next` method of given iterator/generator.
 	"""
+
 	def __init__(self, it):
 		self.it = it
 		self.lock = threading.Lock()
@@ -91,6 +98,7 @@ class Threadsafe_iter:
 
 	def next(self):
 		"""Recover next item from the iterator/generator."""
+
 		# The 'with' statement clarifies code that
 		# previously would use try...finally blocks
 		with self.lock:
@@ -112,9 +120,16 @@ class Utils(object):
 		return g
 
 	@staticmethod
-	def calc_rpn(config, data, width, height, new_width, new_height,
-		img_len_calc_func):
+	def calc_rpn(
+			config,
+			data,
+			width,
+			height,
+			new_width,
+			new_height,
+			img_len_calc_func):
 		"""Calculate Region Proposals using the anchors."""
+
 		downscale = float(config.rpn_stride)
 		anchor_sizes = config.anchor_box_scales
 		anchor_ratios = config.anchor_box_ratios
@@ -147,7 +162,7 @@ class Utils(object):
 			new_width,
 			new_height
 		)
-		# print("Antes de calcular RPN GT")
+
 		ans = Utils.get_RPN_ground_truth(
 			config, anchor_sizes, anchor_ratios, n_anchratios, output_width,
 			output_height, new_width, new_height, downscale, num_bboxes, gta,
@@ -168,62 +183,74 @@ class Utils(object):
 
 		# Select only positive and valid regions
 		pos_locs = np.where(np.logical_and(y_rpn_overlap[0, :, :, :] == 1,
-								y_is_box_valid[0, :, :, :] == 1
-							))
+								y_is_box_valid[0, :, :, :] == 1)
+							)
 		# Select only positive and valid backgrounds
 		neg_locs = np.where(np.logical_and(y_rpn_overlap[0, :, :, :] == 0,
-								y_is_box_valid[0, :, :, :] == 1
-							))
+								y_is_box_valid[0, :, :, :] == 1)
+							)
 		# Number of positives
 		num_pos = len(pos_locs[0])
 
-		# one issue is that the RPN has many more negative than positive regions,
+		# One issue is that the RPN has many more negative than positive regions,
 		# so we turn off some of the negative regions. We also limit it to 256 regions.
 		num_regions = 256
 
-		if len(pos_locs[0]) > num_regions/2:
-			val_locs = random.sample(range(len(pos_locs[0])), len(pos_locs[0]) - num_regions/2)
-			y_is_box_valid[0, pos_locs[0][val_locs], pos_locs[1][val_locs], pos_locs[2][val_locs]] = 0
-			num_pos = num_regions/2
+		if len(pos_locs[0]) > num_regions / 2:
+			val_locs = random.sample(
+				range(len(pos_locs[0])), len(pos_locs[0]) - num_regions/2
+			)
+			aux1 = pos_locs[0][val_locs]
+			aux2 = pos_locs[1][val_locs]
+			y_is_box_valid[0, aux1, aux2, pos_locs[2][val_locs]] = 0
+			num_pos = num_regions / 2
 
 		if len(neg_locs[0]) + num_pos > num_regions:
-			val_locs = random.sample(range(len(neg_locs[0])), len(neg_locs[0]) - num_pos)
-			y_is_box_valid[0, neg_locs[0][val_locs], neg_locs[1][val_locs], neg_locs[2][val_locs]] = 0
+			val_locs = random.sample(
+				range(len(neg_locs[0])), len(neg_locs[0]) - num_pos
+			)
+			aux1 = neg_locs[0][val_locs]
+			aux2 = neg_locs[1][val_locs]
+			y_is_box_valid[0, aux1, aux2, neg_locs[2][val_locs]] = 0
 
 		y_rpn_cls = np.concatenate([y_is_box_valid, y_rpn_overlap], axis=1)
-		y_rpn_regr = np.concatenate([np.repeat(y_rpn_overlap, 4, axis=1), y_rpn_regr], axis=1)
+		y_rpn_regr = np.concatenate(
+			[np.repeat(y_rpn_overlap, 4, axis=1), y_rpn_regr],
+			axis=1
+		)
 
 		return np.copy(y_rpn_cls), np.copy(y_rpn_regr)
 
 	@staticmethod
 	def get_GT_box_coordinates(
-		data,
-		num_bboxes,
-		width,
-		height,
-		new_width,
-		new_height
-		):
+			data,
+			num_bboxes,
+			width,
+			height,
+			new_width,
+			new_height):
 		"""Get the GT box coordinates, and resize to account for
-		image resizing
+		image resizing.
 		"""
+
 		gta = np.zeros((num_bboxes, 4))
 		for bbox_num, bbox in enumerate(data['bboxes']):
 			# get the GT box coordinates, and resize to account
 			# for image resizing
-			gta[bbox_num, 0] = bbox['x1'] * (new_width / float(width))
-			gta[bbox_num, 1] = bbox['x2'] * (new_width / float(width))
-			gta[bbox_num, 2] = bbox['y1'] * (new_height / float(height))
-			gta[bbox_num, 3] = bbox['y2'] * (new_height / float(height))
+			gta[bbox_num, 0] = bbox['x1'] * (new_width/float(width))
+			gta[bbox_num, 1] = bbox['x2'] * (new_width/float(width))
+			gta[bbox_num, 2] = bbox['y1'] * (new_height/float(height))
+			gta[bbox_num, 3] = bbox['y2'] * (new_height/float(height))
 
 		return gta
 
 	@staticmethod
-	def get_RPN_ground_truth(config, anchor_sizes, anchor_ratios, n_anchratios,
-		output_width, output_height, new_width, new_height, downscale,
-		num_bboxes, gta, data, y_rpn_overlap, y_is_box_valid, y_rpn_regr,
-		num_anchors_for_bbox, best_anchor_for_bbox, best_iou_for_bbox,
-		best_x_for_bbox, best_dx_for_bbox):
+	def get_RPN_ground_truth(
+			config, anchor_sizes, anchor_ratios, n_anchratios,
+			output_width, output_height, new_width, new_height, downscale,
+			num_bboxes, gta, data, y_rpn_overlap, y_is_box_valid, y_rpn_regr,
+			num_anchors_for_bbox, best_anchor_for_bbox, best_iou_for_bbox,
+			best_x_for_bbox, best_dx_for_bbox):
 		"""RPN Ground Truth"""
 
 		for anchor_size_idx in range(len(anchor_sizes)):
@@ -235,15 +262,15 @@ class Utils(object):
 
 				for ix in range(output_width):
 					# x-coordinates of the current anchor box
-					x1_anc = downscale * (ix + 0.5) - anchor_x / 2
-					x2_anc = downscale * (ix + 0.5) + anchor_x / 2
+					x1_anc = downscale * (ix+0.5) - anchor_x / 2
+					x2_anc = downscale * (ix+0.5) + anchor_x / 2
 					# ignore boxes that go across image boundaries
 					if x1_anc < 0 or x2_anc > new_width:
 						continue
 					for jy in range(output_height):
 						# y-coordinates of the current anchor box
-						y1_anc = downscale * (jy + 0.5) - anchor_y / 2
-						y2_anc = downscale * (jy + 0.5) + anchor_y / 2
+						y1_anc = downscale * (jy+0.5) - anchor_y / 2
+						y2_anc = downscale * (jy+0.5) + anchor_y / 2
 						# ignore boxes that go across image boundaries
 						if y1_anc < 0 or y2_anc > new_height:
 							continue
@@ -265,16 +292,16 @@ class Utils(object):
 							cond1 = curr_iou > best_iou_for_bbox[bbox_num]
 							cond2 = curr_iou > config.rpn_max_overlap
 							if cond1 or cond2:
-								cx = (gta[bbox_num, 0] + gta[bbox_num, 1]) / 2.0
-								cy = (gta[bbox_num, 2] + gta[bbox_num, 3]) / 2.0
-								cxa = (x1_anc + x2_anc) / 2.0
-								cya = (y1_anc + y2_anc) / 2.0
-								tx = (cx - cxa) / (x2_anc - x1_anc)
-								ty = (cy - cya) / (y2_anc - y1_anc)
+								cx = (gta[bbox_num, 0]+gta[bbox_num, 1]) / 2.0
+								cy = (gta[bbox_num, 2]+gta[bbox_num, 3]) / 2.0
+								cxa = (x1_anc+x2_anc) / 2.0
+								cya = (y1_anc+y2_anc) / 2.0
+								tx = (cx-cxa) / (x2_anc-x1_anc)
+								ty = (cy-cya) / (y2_anc-y1_anc)
 								div = x2_anc - x1_anc
-								tw = np.log((gta[bbox_num, 1] - gta[bbox_num, 0]) / (div))
+								tw = np.log((gta[bbox_num, 1]-gta[bbox_num, 0]) / (div))
 								div = y2_anc - y1_anc
-								th = np.log((gta[bbox_num, 3] - gta[bbox_num, 2]) / (div))
+								th = np.log((gta[bbox_num, 3]-gta[bbox_num, 2]) / (div))
 
 							if data['bboxes'][bbox_num]['class'] != 'bg':
 								""" all GT boxes should be mapped to an anchor
@@ -317,27 +344,44 @@ class Utils(object):
 							start = 4 * (anchor_ratio_idx + n_anchratios * anchor_size_idx)
 							y_rpn_regr[jy, ix, start:start+4] = best_regr
 		aux1 = [y_rpn_overlap, y_is_box_valid, y_rpn_regr]
-		aux2 = [num_anchors_for_bbox, best_anchor_for_bbox, best_iou_for_bbox, best_x_for_bbox, best_dx_for_bbox]
+		aux2 = [
+			num_anchors_for_bbox,
+			best_anchor_for_bbox,
+			best_iou_for_bbox,
+			best_x_for_bbox,
+			best_dx_for_bbox
+		]
+
 		return [aux1, aux2]
 
 	@staticmethod
-	def ensure_least_one_pos_RPN(y_rpn_overlap, y_is_box_valid, y_rpn_regr,
-		num_anchors_for_bbox, best_anchor_for_bbox, n_anchratios, best_dx_for_bbox):
-		"""We ensure that every bbox has at least one positive RPN region"""
+	def ensure_least_one_pos_RPN(
+			y_rpn_overlap, y_is_box_valid, y_rpn_regr,
+			num_anchors_for_bbox, best_anchor_for_bbox, n_anchratios,
+			best_dx_for_bbox):
+		"""We ensure that every bbox has at least one positive RPN region."""
+
 		for idx in range(num_anchors_for_bbox.shape[0]):
 			if num_anchors_for_bbox[idx] == 0:
 				# no box with an IoU greater than zero ...
 				if best_anchor_for_bbox[idx, 0] == -1:
 					continue
 				y_is_box_valid[
-					best_anchor_for_bbox[idx,0], best_anchor_for_bbox[idx,1], best_anchor_for_bbox[idx,2] + n_anchratios *
-					best_anchor_for_bbox[idx,3]] = 1
+					best_anchor_for_bbox[idx,0], best_anchor_for_bbox[idx,1],
+					best_anchor_for_bbox[idx,2] + n_anchratios * best_anchor_for_bbox[idx,3]
+				] = 1
 				y_rpn_overlap[
-					best_anchor_for_bbox[idx,0], best_anchor_for_bbox[idx,1], best_anchor_for_bbox[idx,2] + n_anchratios *
-					best_anchor_for_bbox[idx,3]] = 1
-				start = 4 * (best_anchor_for_bbox[idx,2] + n_anchratios * best_anchor_for_bbox[idx,3])
+					best_anchor_for_bbox[idx,0], best_anchor_for_bbox[idx,1],
+					best_anchor_for_bbox[idx,2] + n_anchratios * best_anchor_for_bbox[idx,3]
+				] = 1
+				tmp1 = best_anchor_for_bbox[idx,2]
+				tmp2 = best_anchor_for_bbox[idx,3]
+				start = 4 * (tmp1 + n_anchratios * tmp2)
 				y_rpn_regr[
-				best_anchor_for_bbox[idx,0], best_anchor_for_bbox[idx,1], start:start+4] = best_dx_for_bbox[idx, :]
+					best_anchor_for_bbox[idx,0],
+					best_anchor_for_bbox[idx,1],
+					start:start+4
+				] = best_dx_for_bbox[idx, :]
 
 		y_rpn_overlap = np.transpose(y_rpn_overlap, (2, 0, 1))
 		y_rpn_overlap = np.expand_dims(y_rpn_overlap, axis=0)
@@ -356,9 +400,8 @@ class Utils(object):
 
 		sample_selector = SampleSelector(class_count)
 		data_augment_img = DataAugment(config)
-		cont = 1
+
 		while True:
-			print(cont)
 			if mode == 'train':
 				# Randomize all image data
 				np.random.shuffle(all_data)
@@ -383,25 +426,24 @@ class Utils(object):
 
 					(width, height) = (img_data_aug['width'], img_data_aug['height'])
 					(rows, cols, _) = x_img.shape
-
 					assert cols == width
 					assert rows == height
-
 					# get image dimensions for resizing
 					(new_width, new_height) = ImageTools.get_new_img_size(
 						width,
 						height,
 						config.im_size
 					)
-
 					# resize the image so that smalles side is length = 600px
-					x_img = cv2.resize(x_img,
+					x_img = cv2.resize(
+						x_img,
 						(new_width, new_height),
 						interpolation=cv2.INTER_CUBIC
 					)
 
 					try:
-						y_rpn_cls, y_rpn_regr = Utils.calc_rpn(config,
+						y_rpn_cls, y_rpn_regr = Utils.calc_rpn(
+							config,
 							img_data_aug,
 							width, height,
 							new_width, new_height,
@@ -409,7 +451,6 @@ class Utils(object):
 						)
 					except Exception as e:
 						print("L2 get_anchor_gt", e)
-						# traceback.print_exc()
 						continue
 
 					# Zero-center by mean pixel, and preprocess image
@@ -429,9 +470,9 @@ class Utils(object):
 					y_rpn_cls = np.transpose(y_rpn_cls, (0, 2, 3, 1))
 					y_rpn_regr = np.transpose(y_rpn_regr, (0, 2, 3, 1))
 
-					yield np.copy(x_img), [np.copy(y_rpn_cls), np.copy(y_rpn_regr)], img_data_aug
+					aux = np.copy(x_img)
+					yield aux, [np.copy(y_rpn_cls), np.copy(y_rpn_regr)], img_data_aug
 
 				except Exception as e:
 					print("L1 get_anchor_gt", e)
 					continue
-				cont += 1

@@ -1,22 +1,33 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
-Shape model module contains a class to manage the model for shapes and connectors recognition, allows train an architecture that use CNNs.
+Shape model module contains a class to manage the model for shapes and connectors
+recognition, allows train an architecture that use CNNs.
 """
+
+__autor__ = "David"
+__credits__ = ["David Betancourt Montellano", "Onder Francisco Campos García"]
+__license__ = "MIT"
+__version__ = "1.0"
+__email__ = "davbetm@gmail.com"
+__status__ = "Development"
+
 
 class ShapeModel(object):
     """ShapeModel allows to start and manager the training and test process
     in a deep learning arquitecture for object detection, such is Faster R-CNN.
+    The implementation is based in code from: https://github.com/kbardool/keras-frcnn
+    Mirror link: https://github.com/dbetm/keras-frcnn
     """
 
-    def __init__(self,
-        batch_size,
-        learning_rate,
-        train_data_path,
-        test_data_path,
-        epochs
-    ):
+    def __init__(
+            self,
+            batch_size,
+            learning_rate,
+            train_data_path,
+            test_data_path,
+            epochs):
+
         super(ShapeModel, self).__init__()
         self.batch_size = batch_size
         self.learning_rate = learning_rate

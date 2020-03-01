@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 from __future__ import division
 import random
 import pprint
@@ -25,11 +23,13 @@ from frcnn.cnn import CNN
 from frcnn.utilities.config import Config
 from frcnn.utilities.parser import Parser
 
+
 class Trainer(object):
 	"""Setup training and run for some epochs."""
 
 	def __init__(self):
 		super(Trainer, self).__init__()
+
 		self.config = Config()
 		self.__setup()
 		self.parser = None
@@ -60,26 +60,30 @@ class Trainer(object):
 		self.rpn_accuracy_for_epoch = None
 
 	def __setup(self):
+		"""System and session, setup."""
 		sys.setrecursionlimit(40000)
 		logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-	def configure(self,
-		horizontal_flips,
-		vertical_flips,
-		output_weight_path,
-		num_rois,
-		input_weight_path,
-		num_epochs=5,
-		epoch_length=32
-		):
+	def configure(
+			self,
+			horizontal_flips,
+			vertical_flips,
+			num_rois,
+			weights_output_path,
+			weights_input_path,
+			num_epochs=5,
+			epoch_length=32,
+			learning_rate=1e-5):
+		"""Set hyperparameters before the training process."""
+
 		self.config.horizontal_flips = horizontal_flips
 		self.config.vertical_flips = vertical_flips
-		self.config.model_path = output_weight_path
 		self.config.num_rois = num_rois
-		self.config.base_net_weights = input_weight_path
+		self.config.weights_output_path = weights_output_path
+		self.config.weights_input_path = weights_input_path
 		self.config.num_epochs = num_epochs
 		self.config.epoch_length = epoch_length
-
+		self.config.learning_rate = learning_rate
 		self.num_anchors = len(self.config.anchor_box_scales)
 		self.num_anchors *= len(self.config.anchor_box_ratios)
 		# Instance convolutional neural network
@@ -92,17 +96,18 @@ class Trainer(object):
 		self.input_shape_image = (None, None, 3)
 
 	def recover_data(
-		self,
-		dataset_path,
-		annotate_path="frcnn/utilities/annotate.txt",
-		generate_annotate=False
-		):
+			self,
+			dataset_path,
+			annotate_path="frcnn/utilities/annotate.txt",
+			generate_annotate=False):
 		"""Recover data from annotate file or create annotate file from dataset.
 		"""
+		# Instance parser, recover data from annotate file or dataset
 		self.parser = Parser(
 			dataset_path=dataset_path,
 			annotate_path=annotate_path
 		)
+		# Get data dictionaries
 		ans = self.parser.get_data(generate_annotate=generate_annotate)
 		self.all_data, self.classes_count, self.class_mapping = ans
 		# If bg was not added, it will be added to the data image dictionaries.
@@ -111,44 +116,49 @@ class Trainer(object):
 			self.class_mapping['bg'] = len(self.class_mapping)
 		# Mapping persistence in config object
 		self.config.class_mapping = self.class_mapping
-
+		# Show resume from loaded data
 		self.show_info_data()
 
 	def show_info_data(self):
 		"""Show data that it will use for training."""
+
 		print('Training images per class:')
 		pprint.pprint(self.classes_count)
 		print('Num classes (including bg) = {}'.format(len(self.classes_count)))
 
 	def save_config(self, config_output_filename):
+		"""Do persistence the config data for training process."""
+
 		self.config.config_output_filename = config_output_filename
 		with open(config_output_filename, 'wb') as config_f:
 			pickle.dump(self.config, config_f)
-			message = 'Config has been written to {}, and can be loaded when testing to ensure correct results'
+			message = 'Config has been written to {}, and can be '
+			message += 'loaded when testing to ensure correct results'
 			print(message.format(config_output_filename))
 
 	def train(self, learning_rate=1e-5):
-		self.__pre_train()
+		"""Train the Faster R-CNN."""
+
+		learning_rate = self.config.learning_rate
+		self.__prepare_train()
 		self.__build_frcnn(learning_rate)
 
 		# Iterative process
 		iter_num = 0
 		best_loss = np.Inf
 
-		# Invert key-value in classes dictionary
-		class_mapping_inv = {v: k for k, v in self.class_mapping.items()}
-
 		# Start iterative process
-		print("Starting training :)")
-
+		print("The training has begun :)")
 		for epoch_num in range(self.config.num_epochs):
-			start_time = time.time()
+			start_time = time.time() # init time for current epoch
+			# Instance progress bar for display progress in current epoch
 			progress_bar = generic_utils.Progbar(self.config.epoch_length)
 			print('Epoch {}/{}'.format(epoch_num + 1, self.config.num_epochs))
+
 			while True:
 				try:
-					# If an epoch is completed + allowed verbose, then
-					# Print the average number of overlapping bboxes.
+					# If an epoch is completed + allowed verbose, then:
+					# print the average number of overlapping bboxes.
 					len_rpn_acc_rpn_moni = len(self.rpn_accuracy_rpn_monitor)
 					cond1 = len_rpn_acc_rpn_moni == self.config.epoch_length
 					if cond1 and self.config.verbose:
@@ -159,15 +169,18 @@ class Trainer(object):
 					loss_rpn = self.model_rpn.train_on_batch(X, Y)
 					# pred with RPN
 					pred_rpn = self.model_rpn.predict_on_batch(X)
+					# Instance a ROI Helper
+					roi_helper = ROIHelpers(
+						self.config,
+						overlap_thresh=0.9,
+						max_boxes=300
+					)
 					# Convert RPN to ROI
-					roi_helper = ROIHelpers(self.config, overlap_thresh=0.9, max_boxes=300)
-
 					roi = roi_helper.convert_rpn_to_roi(
 						pred_rpn[0],
 						pred_rpn[1],
 						use_regr=True
 					)
-
 					# note: calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
 					X2, Y1, Y2, ious = roi_helper.calc_iou(
 						roi,
@@ -194,12 +207,11 @@ class Trainer(object):
 
 					# Select samples from positives and negatives samples
 					sel_samples = self.__select_samples(neg_samples, pos_samples)
-
 					# Update losses, for class detector and RPN
 					self.__update_losses(sel_samples, iter_num, loss_rpn, X, X2, Y1, Y2)
-					# Update progress bar in an epoch
+					# Update progress bar in the current epoch
 					progress_bar.update(
-						iter_num+1,
+						iter_num + 1,
 						[
 							('rpn_cls', self.losses[iter_num, 0]),
 							('rpn_regr', self.losses[iter_num, 1]),
@@ -210,7 +222,7 @@ class Trainer(object):
 
 					iter_num += 1
 
-					# If the epoch actual is completed
+					# If the current epoch is completed
 					if iter_num == self.config.epoch_length:
 						best_loss = self.__update_losses_in_epoch(best_loss, start_time)
 						iter_num = 0
@@ -224,7 +236,11 @@ class Trainer(object):
 
 		print('Training complete, exiting :p.')
 
-	def __pre_train(self):
+	def __prepare_train(self):
+		"""Initialize data generators, shuffle the data and create other
+		data structures.
+		"""
+
 		# Randomize data
 		random.shuffle(self.all_data)
 		# Set for training process
@@ -254,35 +270,37 @@ class Trainer(object):
 		self.rpn_accuracy_for_epoch = []
 
 	def __build_frcnn(self, learning_rate):
+		"""Create the whole model of the Faster R-CNN."""
+
 		img_input = Input(shape=self.input_shape_image)
 		# Define the base network (VGG16)
 		shared_layers = self.cnn.build_nn_base(img_input)
-		# Define the RPN, built on the base layers
+		# Define the RPN, built on the base layers.
 		rpn = self.cnn.create_rpn(shared_layers)
-
+		# Define classifier, it will assign the class of the detected objects.
 		classifier = self.cnn.build_classifier(
 			shared_layers,
 			num_classes=len(self.classes_count)
 		)
-		# Build models for Faster R-CNN
+		# Build models for Faster R-CNN.
 		self.model_rpn = Model(img_input, rpn[:2])
 		self.model_classifier = Model([img_input, self.roi_input], classifier)
-
 		# This is a model that holds both the RPN and the classifier...
-		# used to load/save weights for the models.
 		self.model_all = Model([img_input, self.roi_input], rpn[:2] + classifier)
-
+		# Use to load/save weights for the models.
 		self.__load_weights()
+		# Save the models like a trainable object.
 		self.__compile_models(learning_rate)
 
 	def __compile_models(self, learning_rate):
-		# Create optimizers and compile models
+		""" Create optimizers and compile models."""
+
 		num_classes = len(self.classes_count)
 		losses = LossesCalculator(num_classes, self.num_anchors)
 
 		optimizer = Adam(lr=learning_rate)
 		optimizer_classifier = Adam(lr=learning_rate)
-		logging.debug("Compile model_rpn") # DEBUG
+
 		self.model_rpn.compile(
 			optimizer=optimizer,
 			loss=[
@@ -290,7 +308,7 @@ class Trainer(object):
 				LossesCalculator.rpn_loss_regr()
 			]
 		)
-		logging.debug("Compile model_classifier") # DEBUG
+
 		self.model_classifier.compile(
 			optimizer=optimizer_classifier,
 			loss=[
@@ -299,13 +317,15 @@ class Trainer(object):
 			],
 			metrics={'dense_class_{}'.format(num_classes): 'accuracy'},
 		)
-		logging.debug("Compile model_all") # DEBUG
+
 		self.model_all.compile(
 			optimizer='sgd',
 			loss='mae' # Mean Absolute Error
 		)
 
 	def __load_weights(self):
+		"""Load weights from a pretrained model."""
+
 		try:
 			print('Loading weights from {}'.format(self.config.base_net_weights))
 			self.model_rpn.load_weights(self.config.base_net_weights, by_name=True)
@@ -321,16 +341,24 @@ class Trainer(object):
 
 	def __print_average_bbxes(self):
 		"""Show the average number of overlapping bboxes."""
-		sum = sum(self.rpn_accuracy_rpn_monitor)
-		mean_overlapping_bboxes = float(sum) / len(self.rpn_accuracy_rpn_monitor)
+
+		total = sum(self.rpn_accuracy_rpn_monitor)
+		mean_overlapping_bboxes = float(total) / len(self.rpn_accuracy_rpn_monitor)
+
 		self.rpn_accuracy_rpn_monitor = []
-		message = "Average number of overlapping bounding boxes from RPN = {} for {} previous iteration(s)."
+
+		message = "Average number of overlapping bounding boxes from RPN = {}"
+		message +=  " for {} previous iteration(s)."
 		print(message.format(mean_overlapping_bboxes, self.config.epoch_length))
+
 		if mean_overlapping_bboxes == 0:
-			message = "RPN is not producing bounding boxes that overlap the ground truth boxes. Check RPN settings or keep training."
+			message = "RPN is not producing bounding boxes that overlap the "
+			message += "ground truth boxes. Check RPN settings or keep training."
 			print(message)
 
 	def __validate_samples(self, neg_samples, pos_samples):
+		"""Format positives and negatives samples."""
+
 		if len(neg_samples) > 0:
 			# Just choose the first one
 			neg_samples = neg_samples[0]
@@ -345,13 +373,17 @@ class Trainer(object):
 		return (neg_samples, pos_samples)
 
 	def __select_samples(self, neg_samples, pos_samples):
+		"""Select X positives samples and Y negatives samples for complete
+		number RoIs.
+		"""
+
 		if self.config.num_rois > 1:
 			if len(pos_samples) < self.config.num_rois // 2:
 				selected_pos_samples = pos_samples.tolist()
 			else:
 				selected_pos_samples = np.random.choice(
-					pos_samples,
-					self.config.num_rois // 2,
+					a=pos_samples,
+					size=self.config.num_rois // 2,
 					replace=False
 				).tolist()
 			try:
@@ -373,8 +405,9 @@ class Trainer(object):
 
 			sel_samples = selected_pos_samples + selected_neg_samples
 		else:
-			# in the extreme case where num_rois = 1
-			# we pick a random pos or neg sample
+			"""In the extreme case where num_rois = 1, we pick a random pos
+			or neg sample.
+			"""
 			selected_pos_samples = pos_samples.tolist()
 			selected_neg_samples = neg_samples.tolist()
 			if np.random.randint(0, 2):
@@ -385,6 +418,9 @@ class Trainer(object):
 		return sel_samples
 
 	def __update_losses(self, sel_samples, iter_num, loss_rpn, X, X2, Y1, Y2):
+		"""Update losses for RPN and classifier."""
+
+		# Calculate weights according to classifier batch training.
 		loss_class = self.model_classifier.train_on_batch(
 			[X, X2[:, sel_samples, :]],
 			[Y1[:, sel_samples, :], Y2[:, sel_samples, :]]
@@ -392,22 +428,24 @@ class Trainer(object):
 
 		self.losses[iter_num, 0] = loss_rpn[1]
 		self.losses[iter_num, 1] = loss_rpn[2]
-
 		self.losses[iter_num, 2] = loss_class[1]
 		self.losses[iter_num, 3] = loss_class[2]
 		self.losses[iter_num, 4] = loss_class[3]
 
 	def __update_losses_in_epoch(self, best_loss, start_time):
+		"""Update the final losses after the epochs ends."""
+
+		# Average losses
 		loss_rpn_cls = np.mean(self.losses[:, 0])
 		loss_rpn_regr = np.mean(self.losses[:, 1])
 		loss_class_cls = np.mean(self.losses[:, 2])
 		loss_class_regr = np.mean(self.losses[:, 3])
 		class_acc = np.mean(self.losses[:, 4])
 
-		sum = sum(self.rpn_accuracy_for_epoch)
-		mean_overlapping_bboxes = float(sum) / len(self.rpn_accuracy_for_epoch)
+		total = sum(self.rpn_accuracy_for_epoch)
+		mean_overlapping_bboxes = float(total) / len(self.rpn_accuracy_for_epoch)
 		self.rpn_accuracy_for_epoch = []
-
+		# Print the resume of the epoch
 		if self.config.verbose:
 			message = 'Mean number of bounding boxes from RPN overlapping ground truth boxes: {}'
 			print(message.format(mean_overlapping_bboxes))
@@ -420,12 +458,13 @@ class Trainer(object):
 			print('Elapsed time: {}'.format(time.time() - start_time))
 
 		curr_loss = loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr
-
+		# Update the best loss if the current loss is better.
 		if curr_loss < best_loss:
 			if self.config.verbose:
 				message = 'Total loss decreased from {} to {}, saving weights'
 				print(message.format(best_loss, curr_loss))
 			best_loss = curr_loss
+			# Save the best model
 			self.model_all.save_weights(self.config.model_path)
 
 		return best_loss
@@ -439,6 +478,12 @@ if __name__ == '__main__':
 		generate_annotate=False,
 		annotate_path="frcnn/utilities/annotate.txt"
 	)
-	trainer.configure(False, False, "model_frcnn_v0.hdf5", 32, weights_input_path)
+	trainer.configure(
+		horizontal_flips=False,
+		vertical_flips=False,
+		num_rois=32,
+		weights_output_path="model_frcnn_v0.hdf5",
+		weights_input_path=weights_input_path
+	)
 	trainer.save_config("config.pickle")
 	trainer.train(learning_rate=1e-5)

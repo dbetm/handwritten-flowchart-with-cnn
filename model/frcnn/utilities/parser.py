@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import cv2
@@ -7,6 +6,7 @@ import pandas as pd
 import os
 import xml.etree.ElementTree as ET
 
+
 class Parser(object):
 	"""Recovery the data from annotations file or generate annotations file
 	from dataset.
@@ -14,6 +14,7 @@ class Parser(object):
 
 	def __init__(self, dataset_path, annotate_path="annotate.txt"):
 		super(Parser, self).__init__()
+
 		self.dataset_path = dataset_path
 		self.annotate_path = annotate_path
 		# Dictionaries for save the data
@@ -24,10 +25,11 @@ class Parser(object):
 		self.found_bg = False
 
 	def get_data(self, generate_annotate=False):
-		"""Parsing annotations files"""
+		"""Parsing annotations files."""
+
 		if(generate_annotate):
 			self.__generate_annotate()
-
+		# Open annotations file
 		with open(self.annotate_path, 'r') as f:
 			print('Parsing annotation file...')
 			for line in f:
@@ -48,7 +50,8 @@ class Parser(object):
 			return all_data, self.classes_count, self.class_mapping
 
 	def __read_line(self, line):
-		"""Read the next line in annotations file"""
+		"""Read the next line in annotations file."""
+
 		line_split = line.strip().split(',')
 		(filename, x1, y1, x2, y2, class_name, test) = line_split
 		test = (test == "1")
@@ -88,6 +91,7 @@ class Parser(object):
 
 	def __generate_annotate(self):
 		"""Generate annotation file from dataset."""
+
 		print("Generating annots file...")
 
 		train_path = self.dataset_path + "/train"
@@ -100,13 +104,18 @@ class Parser(object):
 		data.to_csv(self.annotate_path, header=None, index=None, sep=',')
 
 	def __collect_data(self, path, test=False, data=[]):
+		"""Get data from validation or training folder of dataset (xml files)."""
+
+		# Check if it will get from validation or train
 		if(test):
 			type = 1
 			base_path = self.dataset_path + "/validation/"
 		else:
 			type = 0
 			base_path = self.dataset_path + "/train/"
+
 		path_dataset = os.listdir(path)
+		# Get for each class folder
 		for class_i in path_dataset:
 			items_path = path + "/" + class_i + "/annots"
 			base = base_path + class_i + "/images"
@@ -123,22 +132,25 @@ class Parser(object):
 					ymax = int(node.find('bndbox/ymax').text)
 					_class = node.find('name').text
 					row = [image_path, xmin, xmax, ymin, ymax, _class, type]
-					#print(row)
 					data.append(row)
+
 		return data
 
 	@staticmethod
 	def get_int(name):
+		"""Convert a numeric filename in integer."""
+
 		num, extension = name.split('.')
+
 		return int(num)
 
 if __name__ == '__main__':
 	simple_parser = Parser(
 		dataset_path="/home/david/datasets/flowchart-3b(splitter)",
-		annotate_path="annotate2.txt"
+		annotate_path="annotate.txt"
 	)
 	all_data, classes_count, class_mapping = simple_parser.get_data(
-		generate_annotate=True
+		generate_annotate=False
 	)
 	print(all_data)
 	print("-"*35)

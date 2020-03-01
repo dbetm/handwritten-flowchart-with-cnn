@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import numpy as np
@@ -21,6 +20,7 @@ class ROIHelpers(object):
 
 	def calc_iou(self, R, data, class_mapping):
 		"""Calc the best IoUs considering all classes."""
+
 		bboxes = data['bboxes']
 		(width, height) = (data['width'], data['height'])
 		# get image dimensions for resizing
@@ -62,7 +62,12 @@ class ROIHelpers(object):
 			best_bbox = -1
 			for bbox_num in range(len(bboxes)):
 				curr_iou = Metrics.iou(
-					[gta[bbox_num, 0], gta[bbox_num, 2], gta[bbox_num, 1], gta[bbox_num, 3]],
+					[
+						gta[bbox_num, 0],
+						gta[bbox_num, 2],
+						gta[bbox_num, 1],
+						gta[bbox_num, 3]
+					],
 					[x1, y1, x2, y2]
 				)
 				if curr_iou > best_iou:
@@ -76,11 +81,12 @@ class ROIHelpers(object):
 				h = y2 - y1
 				x_roi.append([x1, y1, w, h])
 				IoUs.append(best_iou)
-
-				if self.config.classifier_min_overlap <= best_iou < self.config.classifier_max_overlap:
+				min_overlap = self.config.classifier_min_overlap
+				max_overlap = self.config.classifier_max_overlap
+				if min_overlap <= best_iou < max_overlap:
 					# hard negative example, background
 					cls_name = 'bg'
-				elif self.config.classifier_max_overlap <= best_iou:
+				elif max_overlap <= best_iou:
 					cls_name = bboxes[best_bbox]['class']
 					cxg = (gta[best_bbox, 0] + gta[best_bbox, 1]) / 2.0
 					cyg = (gta[best_bbox, 2] + gta[best_bbox, 3]) / 2.0
@@ -120,12 +126,13 @@ class ROIHelpers(object):
 			[np.array(y_class_regr_label), np.array(y_class_regr_coords)],
 			axis=1
 		)
-
-		return np.expand_dims(X, axis=0), np.expand_dims(Y1, axis=0), np.expand_dims(Y2, axis=0), IoUs
+		x_ans = np.expand_dims(X, axis=0)
+		return x_ans, np.expand_dims(Y1, axis=0), np.expand_dims(Y2, axis=0), IoUs
 
 	@staticmethod
 	def apply_regr(x, y, w, h, tx, ty, tw, th):
 		"""Apply regression, calc rectangle tighter."""
+
 		try:
 			cx = x + w/2.
 			cy = y + h/2.
@@ -152,6 +159,7 @@ class ROIHelpers(object):
 
 	@staticmethod
 	def apply_regr_np(X, T):
+
 		"""Apply regression, calc rectangle tighter, passing numpy vectors."""
 		try:
 			x = X[0, :, :]
@@ -185,10 +193,10 @@ class ROIHelpers(object):
 
 	def apply_non_max_suppression_fast(self, boxes, probs):
 		"""Select the bounding boxes most likely, deleting the rest."""
-		# if there are no boxes, return an empty list
+
+		# If there are no boxes, return an empty list
 		if len(boxes) == 0:
 			return []
-
 		# grab the coordinates of the bounding boxes
 		x1 = boxes[:, 0]
 		y1 = boxes[:, 1]
@@ -198,24 +206,23 @@ class ROIHelpers(object):
 		np.testing.assert_array_less(x1, x2)
 		np.testing.assert_array_less(y1, y2)
 
-		# if the bounding boxes integers, convert them to floats --
+		# if the bounding boxes integers, convert them to floats.
 		# this is important since we'll be doing a bunch of divisions
 		if boxes.dtype.kind == "i":
 			boxes = boxes.astype("float")
 
 		# initialize the list of picked indexes
 		pick = []
-
 		# calculate the areas
-		area = (x2 - x1) * (y2 - y1)
-
+		area = (x2-x1) * (y2-y1)
 		# sort the bounding boxes
 		idxs = np.argsort(probs)
 
 		# keep looping while some indexes still remain in the indexes list
 		while len(idxs) > 0:
-			# grab the last index in the indexes list and add the
-			# index value to the list of picked indexes
+			""" Grab the last index in the indexes list and add the index value
+			to the list of picked indexes.
+			"""
 			last = len(idxs) - 1
 			i = idxs[last]
 			pick.append(i)
@@ -225,7 +232,7 @@ class ROIHelpers(object):
 			yy1_int = np.maximum(y1[i], y1[idxs[:last]])
 			xx2_int = np.minimum(x2[i], x2[idxs[:last]])
 			yy2_int = np.minimum(y2[i], y2[idxs[:last]])
-
+			# Width and Height
 			ww_int = np.maximum(0, xx2_int - xx1_int)
 			hh_int = np.maximum(0, yy2_int - yy1_int)
 
@@ -235,22 +242,25 @@ class ROIHelpers(object):
 			area_union = area[i] + area[idxs[:last]] - area_int
 
 			# compute the ratio of overlap
-			overlap = area_int/(area_union + 1e-6)
+			overlap = area_int / (area_union + 1e-6)
 
 			# delete all indexes from the index list that have
-			idxs = np.delete(idxs, np.concatenate(([last],
-				np.where(overlap > self.overlap_thresh)[0])))
+			idxs = np.delete(
+				idxs,
+				np.concatenate(([last], np.where(overlap > self.overlap_thresh)[0]))
+			)
 
 			if len(pick) >= self.max_boxes:
 				break
 
-		# return only the bbxes that were picked using the integer data type
+		# Return only the bbxes that were picked using the integer data type
 		boxes = boxes[pick].astype("int")
 		probs = probs[pick]
 		return boxes, probs
 
 	def convert_rpn_to_roi(self, rpn_layer, regr_layer, use_regr=True):
 		"""Convert a proposal region into a region of interest."""
+
 		regr_layer = regr_layer / self.config.std_scaling
 		anchor_sizes = self.config.anchor_box_scales
 		anchor_ratios = self.config.anchor_box_ratios
@@ -299,7 +309,6 @@ class ROIHelpers(object):
 					rows-1,
 					A[3, :, :, curr_layer]
 				)
-
 				curr_layer += 1
 
 		all_boxes = np.reshape(A.transpose((0, 3, 1,2)), (4, -1)).transpose((1, 0))
@@ -316,5 +325,4 @@ class ROIHelpers(object):
 		all_probs = np.delete(all_probs, idxs, 0)
 
 		result = self.apply_non_max_suppression_fast(all_boxes, all_probs)[0]
-
 		return result
