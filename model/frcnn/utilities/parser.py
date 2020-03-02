@@ -69,8 +69,16 @@ class Parser(object):
 
 		if filename not in self.all_imgs:
 			self.all_imgs[filename] = {}
-			img = cv2.imread(filename)
-			(rows,cols) = img.shape[:2]
+			rows = None
+			cols = None
+			try:
+				img = cv2.imread(filename)
+				(rows,cols) = img.shape[:2]
+			except Exception as e:
+				print(e)
+				print("It is suggested to generate the annotation file again.")
+				exit()
+
 			self.all_imgs[filename]['filepath'] = filename
 			self.all_imgs[filename]['width'] = cols
 			self.all_imgs[filename]['height'] = rows

@@ -148,7 +148,7 @@ class Trainer(object):
 			message += 'loaded when testing to ensure correct results'
 			print(message.format(config_output_filename))
 
-	def train(self, learning_rate=1e-5):
+	def train(self):
 		"""Train the Faster R-CNN."""
 
 		self.__prepare_train()
@@ -486,10 +486,10 @@ class Trainer(object):
 if __name__ == '__main__':
 	trainer = Trainer()
 	weights_input_path = "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
-	path_dataset = "/home/david/datasets/flowchart-3b(splitter)"
+	path_dataset = "/home/david/Escritorio/flowchart-3b(splitter)"
 	trainer.recover_data(
 		path_dataset,
-		generate_annotate=False,
+		generate_annotate=True,
 		annotate_path="frcnn/utilities/annotate.txt"
 	)
 	trainer.configure(
@@ -501,4 +501,4 @@ if __name__ == '__main__':
 		num_epochs=1
 	)
 	trainer.save_config("config.pickle")
-	trainer.train(learning_rate=1e-5)
+	trainer.train()
