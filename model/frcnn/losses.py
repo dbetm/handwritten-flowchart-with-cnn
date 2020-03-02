@@ -29,12 +29,12 @@ class LossesCalculator(object):
 		"""Calculate loss for regression in RPN."""
 
 		def rpn_loss_regr_fixed_num(y_true, y_pred):
-			x = y_true[:, :, :, 4 * LossesCalculator.num_anchors:] - y_pred
+			anchors = LossesCalculator.num_anchors
+			x = y_true[:, :, :, 4 * anchors:] - y_pred
 			x_abs = K.abs(x)
 			x_bool = K.cast(K.less_equal(x_abs, 1.0), tf.float32)
 
 			lbda_rpn_regr = LossesCalculator.lambda_rpn_regr
-			anchors = LossesCalculator.num_anchors
 			eps = LossesCalculator.epsilon
 			y_sel = y_true[:, :, :, :4 * anchors]
 			sum1 = K.sum(y_sel * (x_bool * (0.5 * x * x) + (1 - x_bool) * (x_abs - 0.5)))

@@ -48,6 +48,7 @@ class Metrics(object):
 		# a and b should be (x1,y1,x2,y2)
 		if a[0] >= a[2] or a[1] >= a[3] or b[0] >= b[2] or b[1] >= b[3]:
 			return 0.0
+
 		area_i = Metrics.intersection(a, b)
 		area_u = Metrics.union(a, b, area_i)
 
@@ -296,6 +297,7 @@ class Utils(object):
 								cy = (gta[bbox_num, 2]+gta[bbox_num, 3]) / 2.0
 								cxa = (x1_anc+x2_anc) / 2.0
 								cya = (y1_anc+y2_anc) / 2.0
+
 								tx = (cx-cxa) / (x2_anc-x1_anc)
 								ty = (cy-cya) / (y2_anc-y1_anc)
 								div = x2_anc - x1_anc

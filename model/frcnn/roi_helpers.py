@@ -57,7 +57,7 @@ class ROIHelpers(object):
 			y1 = int(round(y1))
 			x2 = int(round(x2))
 			y2 = int(round(y2))
-			# Get the best bouning box, i.e. best IoU
+			# Get the best bounding box, i.e. best IoU
 			best_iou = 0.0
 			best_bbox = -1
 			for bbox_num in range(len(bboxes)):
@@ -126,8 +126,8 @@ class ROIHelpers(object):
 			[np.array(y_class_regr_label), np.array(y_class_regr_coords)],
 			axis=1
 		)
-		x_ans = np.expand_dims(X, axis=0)
-		return x_ans, np.expand_dims(Y1, axis=0), np.expand_dims(Y2, axis=0), IoUs
+		x1_ans = np.expand_dims(X, axis=0)
+		return x1_ans, np.expand_dims(Y1, axis=0), np.expand_dims(Y2, axis=0), IoUs
 
 	@staticmethod
 	def apply_regr(x, y, w, h, tx, ty, tw, th):

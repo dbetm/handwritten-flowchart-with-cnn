@@ -86,6 +86,7 @@ class Trainer(object):
 			learning_rate=1e-5):
 		"""Set hyperparameters before the training process."""
 
+		# Config file
 		self.config.horizontal_flips = horizontal_flips
 		self.config.vertical_flips = vertical_flips
 		self.config.num_rois = num_rois
@@ -94,6 +95,7 @@ class Trainer(object):
 		self.config.num_epochs = num_epochs
 		self.config.epoch_length = epoch_length
 		self.config.learning_rate = learning_rate
+		# Trainer
 		self.num_anchors = len(self.config.anchor_box_scales)
 		self.num_anchors *= len(self.config.anchor_box_ratios)
 		# Instance convolutional neural network
@@ -120,7 +122,7 @@ class Trainer(object):
 		# Get data dictionaries
 		ans = self.parser.get_data(generate_annotate=generate_annotate)
 		self.all_data, self.classes_count, self.class_mapping = ans
-		# If bg was not added, it will be added to the data image dictionaries.
+		# If bg was not added, it will be added to the image data dictionaries.
 		if 'bg' not in self.classes_count:
 			self.classes_count['bg'] = 0
 			self.class_mapping['bg'] = len(self.class_mapping)
@@ -149,9 +151,8 @@ class Trainer(object):
 	def train(self, learning_rate=1e-5):
 		"""Train the Faster R-CNN."""
 
-		learning_rate = self.config.learning_rate
 		self.__prepare_train()
-		self.__build_frcnn(learning_rate)
+		self.__build_frcnn()
 
 		# Iterative process
 		iter_num = 0
@@ -191,7 +192,7 @@ class Trainer(object):
 						pred_rpn[1],
 						use_regr=True
 					)
-					# note: calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
+					# Calc_iou converts from (x1,y1,x2,y2) to (x,y,w,h) format
 					X2, Y1, Y2, ious = roi_helper.calc_iou(
 						roi,
 						img_data,
@@ -244,7 +245,7 @@ class Trainer(object):
 					continue
 					#break
 
-		print('Training complete, exiting :p.')
+		print('Training complete!!!, exiting :p')
 
 	def __prepare_train(self):
 		"""Initialize data generators, shuffle the data and create other
@@ -279,7 +280,7 @@ class Trainer(object):
 		self.rpn_accuracy_rpn_monitor = []
 		self.rpn_accuracy_for_epoch = []
 
-	def __build_frcnn(self, learning_rate):
+	def __build_frcnn(self):
 		"""Create the whole model of the Faster R-CNN."""
 
 		img_input = Input(shape=self.input_shape_image)
@@ -296,14 +297,17 @@ class Trainer(object):
 		self.model_rpn = Model(img_input, rpn[:2])
 		self.model_classifier = Model([img_input, self.roi_input], classifier)
 		# This is a model that holds both the RPN and the classifier...
+		# Used to load/save weights for the models
 		self.model_all = Model([img_input, self.roi_input], rpn[:2] + classifier)
 		# Use to load/save weights for the models.
 		self.__load_weights()
 		# Save the models like a trainable object.
-		self.__compile_models(learning_rate)
+		self.__compile_models()
 
-	def __compile_models(self, learning_rate):
+	def __compile_models(self):
 		""" Create optimizers and compile models."""
+
+		learning_rate = self.config.learning_rate
 
 		num_classes = len(self.classes_count)
 		losses = LossesCalculator(num_classes, self.num_anchors)
@@ -353,7 +357,8 @@ class Trainer(object):
 		"""Show the average number of overlapping bboxes."""
 
 		total = sum(self.rpn_accuracy_rpn_monitor)
-		mean_overlapping_bboxes = float(total) / len(self.rpn_accuracy_rpn_monitor)
+		mean_overlapping_bboxes = float(total)
+		mean_overlapping_bboxes /= len(self.rpn_accuracy_rpn_monitor)
 
 		self.rpn_accuracy_rpn_monitor = []
 
@@ -470,9 +475,8 @@ class Trainer(object):
 		curr_loss = loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr
 		# Update the best loss if the current loss is better.
 		if curr_loss < best_loss:
-			if self.config.verbose:
-				message = 'Total loss decreased from {} to {}, saving weights'
-				print(message.format(best_loss, curr_loss))
+			message = 'Total loss decreased from {} to {}, saving weights'
+			print(message.format(best_loss, curr_loss))
 			best_loss = curr_loss
 			# Save the best model
 			self.model_all.save_weights(self.config.weights_output_path)
@@ -494,7 +498,7 @@ if __name__ == '__main__':
 		num_rois=32,
 		weights_output_path="model_frcnn_v0.hdf5",
 		weights_input_path=weights_input_path,
-		num_epochs=5
+		num_epochs=1
 	)
 	trainer.save_config("config.pickle")
 	trainer.train(learning_rate=1e-5)

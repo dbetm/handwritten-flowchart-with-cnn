@@ -29,14 +29,14 @@ class CNN(object):
     def __init__(self, num_anchors, rois, num_classes):
         super(CNN, self).__init__()
 
-        self.weights_path = "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
+        self.weights_input_path= "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
         self.num_anchors = num_anchors
         self.input_rois, self.num_rois = rois
         self.num_classes = num_classes
 
     @staticmethod
     def get_img_output_length(width, height):
-        """Resize image, by -16x factor."""
+        """Resize image dim, by -16x factor."""
         def get_output_length(input_length):
             return input_length // 16
 
@@ -216,15 +216,20 @@ class CNN(object):
         out = TimeDistributed(Dropout(0.5))(out)
         # Define the class of the object using softmax function
         out_class = TimeDistributed(
-                        Dense(num_classes, activation='softmax',
-                        kernel_initializer='zero'),
+                        Dense(
+                            num_classes,
+                            activation='softmax',
+                            kernel_initializer='zero'
+                        ),
                         name='dense_class_{}'.format(num_classes)
                     )(out)
         # note: no regression target for bg class
         out_regr = TimeDistributed(
-                        Dense(4 * (num_classes-1),
-                        activation='linear',
-                        kernel_initializer='zero'),
+                        Dense(
+                            4 * (num_classes-1),
+                            activation='linear',
+                            kernel_initializer='zero'
+                        ),
                         name='dense_regress_{}'.format(num_classes)
                     )(out)
 
