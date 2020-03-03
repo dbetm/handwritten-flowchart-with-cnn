@@ -134,3 +134,6 @@ dmypy.json
 
 # Annotations file
 annotate.txt
+
+# Training results
+training_results/
