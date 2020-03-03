@@ -23,12 +23,13 @@ from frcnn.roi_helpers import ROIHelpers
 from frcnn.cnn import CNN
 from frcnn.utilities.config import Config
 from frcnn.utilities.parser import Parser
+from frcnn.utilities.history import History
 
 
 class Trainer(object):
 	"""Setup training and run for some epochs."""
 
-	def __init__(self, use_gpu=False):
+	def __init__(self, results_path, use_gpu=False):
 		super(Trainer, self).__init__()
 
 		self.config = Config()
@@ -40,6 +41,7 @@ class Trainer(object):
 		self.num_images = 0
 		self.num_anchors = 0
 		self.input_shape_image = None
+		self.results_path = results_path
 		# Datasets for training, split 80% training and 20% for validation
 		self.train_images = None
 		self.val_images = None
@@ -59,6 +61,7 @@ class Trainer(object):
 		self.losses = None
 		self.rpn_accuracy_rpn_monitor = None
 		self.rpn_accuracy_for_epoch = None
+		self.history = History(results_path)
 		# System and session setup
 		self.__setup()
 
@@ -137,6 +140,8 @@ class Trainer(object):
 		print('Training images per class:')
 		pprint.pprint(self.classes_count)
 		print('Num classes (including bg) = {}'.format(len(self.classes_count)))
+		# Persistence the data
+		self.history.save_classes_info(self.classes_count)
 
 	def save_config(self, config_output_filename):
 		"""Do persistence the config data for training process."""
@@ -235,7 +240,11 @@ class Trainer(object):
 
 					# If the current epoch is completed
 					if iter_num == self.config.epoch_length:
-						best_loss = self.__update_losses_in_epoch(best_loss, start_time)
+						best_loss = self.__update_losses_in_epoch(
+							epoch_num,
+							best_loss,
+							start_time
+						)
 						iter_num = 0
 						break
 
@@ -243,7 +252,6 @@ class Trainer(object):
 					#traceback.print_exc()
 					print('Exception: {}'.format(e))
 					continue
-					#break
 
 		print('Training complete!!!, exiting :p')
 
@@ -336,6 +344,15 @@ class Trainer(object):
 			optimizer='sgd',
 			loss='mae' # Mean Absolute Error
 		)
+
+		# test save summaries
+		self.history.save_summary(self.model_rpn, "rpn")
+		self.history.save_summary(self.model_classifier, "classifier")
+		self.history.save_summary(self.model_all, "all")
+		# test save plots
+		self.history.save_model_image(self.model_rpn, "rpn")
+		self.history.save_model_image(self.model_classifier, "classifier")
+		self.history.save_model_image(self.model_all, "all")
 
 	def __load_weights(self):
 		"""Load weights from a pretrained model."""
@@ -447,7 +464,7 @@ class Trainer(object):
 		self.losses[iter_num, 3] = loss_class[2]
 		self.losses[iter_num, 4] = loss_class[3]
 
-	def __update_losses_in_epoch(self, best_loss, start_time):
+	def __update_losses_in_epoch(self, epoch_num, best_loss, start_time):
 		"""Update the final losses after the epochs ends."""
 
 		# Average losses
@@ -459,6 +476,7 @@ class Trainer(object):
 
 		total = sum(self.rpn_accuracy_for_epoch)
 		mean_overlapping_bboxes = float(total) / len(self.rpn_accuracy_for_epoch)
+		total_time = time.time() - start_time
 		self.rpn_accuracy_for_epoch = []
 		# Print the resume of the epoch
 		if self.config.verbose:
@@ -468,9 +486,9 @@ class Trainer(object):
 			print(message.format(class_acc))
 			print('Loss RPN classifier: {}'.format(loss_rpn_cls))
 			print('Loss RPN regression: {}'.format(loss_rpn_regr))
-			print('Loss Detector classifier: {}'.format(loss_class_cls))
-			print('Loss Detector regression: {}'.format(loss_class_regr))
-			print('Elapsed time: {}'.format(time.time() - start_time))
+			print('Loss detector classifier: {}'.format(loss_class_cls))
+			print('Loss detector regression: {}'.format(loss_class_regr))
+			print('Elapsed time: {}'.format(total_time))
 
 		curr_loss = loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr
 		# Update the best loss if the current loss is better.
@@ -479,26 +497,43 @@ class Trainer(object):
 			print(message.format(best_loss, curr_loss))
 			best_loss = curr_loss
 			# Save the best model
-			self.model_all.save_weights(self.config.weights_output_path)
+			self.history.save_best_model(
+				self.model_all,
+				self.config.weights_output_path
+			)
+		# Generate row for epoch info
+		info = []
+		# add data to info list
+		info.append(epoch_num)
+		info.append(mean_overlapping_bboxes)
+		info.append(class_acc)
+		info.append(curr_loss)
+		info.append(loss_rpn_cls)
+		info.append(loss_rpn_regr)
+		info.append(loss_class_cls)
+		info.append(loss_class_regr)
+		info.append(total_time)
+		self.history.append_epoch_info(info)
 
 		return best_loss
 
 if __name__ == '__main__':
-	trainer = Trainer()
+	results_path = "training_results/1"
+	trainer = Trainer(results_path)
 	weights_input_path = "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
 	path_dataset = "/home/david/Escritorio/flowchart-3b(splitter)"
 	trainer.recover_data(
 		path_dataset,
-		generate_annotate=True,
-		annotate_path="frcnn/utilities/annotate.txt"
+		generate_annotate=False,
+		annotate_path=results_path + "/annotate.txt"
 	)
 	trainer.configure(
 		horizontal_flips=False,
 		vertical_flips=False,
 		num_rois=32,
-		weights_output_path="model_frcnn_v0.hdf5",
+		weights_output_path=results_path + "/model_frcnn.hdf5",
 		weights_input_path=weights_input_path,
 		num_epochs=1
 	)
-	trainer.save_config("config.pickle")
+	trainer.save_config(results_path + "/config.pickle")
 	trainer.train()

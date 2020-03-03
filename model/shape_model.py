@@ -59,7 +59,7 @@ class ShapeModel(object):
         # Create folder training folder
         os.mkdir(base_path)
         # Instance Trainer
-        trainer = Trainer(use_gpu)
+        trainer = Trainer(base_path, use_gpu)
         # Recover data from dataset
         trainer.recover_data(
             self.dataset_path,
@@ -78,8 +78,15 @@ class ShapeModel(object):
             learning_rate=learning_rate,
         )
         trainer.save_config(config_output_filename)
-        exit() # DEBUG
         trainer.train()
+
+    def generate_classification_report(self, results_path):
+        """Generate classification report with model pre-trained.
+            - Calculate mAP (mean Average Precision)
+            - Generate classification report.
+            - Generate confusion report.
+        """
+        pass
 
 
 if __name__ == '__main__':

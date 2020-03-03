@@ -132,8 +132,5 @@ dmypy.json
 *.hdf5
 *.h5
 
-# Config files for deep learning model
-*.pickle
-
-# Annotate file
+# Annotations file
 annotate.txt
