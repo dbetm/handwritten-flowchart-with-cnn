@@ -56,7 +56,7 @@ class History(object):
     def append_epoch_info(self, row):
         """Open existing log cvs file and append a new row epoch info."""
 
-        self.csv_log = open(base_path + "/history.csv", "a")
+        self.csv_log = open(self.base_path + "/history.csv", "a")
         string = ','.join(str(s) for s in row)
-        self.csv_log.write(string)
+        self.csv_log.write("\n" + string)
         self.csv_log.close()

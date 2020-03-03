@@ -231,8 +231,9 @@ class Trainer(object):
 						[
 							('rpn_cls', self.losses[iter_num, 0]),
 							('rpn_regr', self.losses[iter_num, 1]),
-							('detec_cls', self.losses[iter_num, 2]),
-							('detec_regr', self.losses[iter_num, 3])
+							('det_cls', self.losses[iter_num, 2]),
+							('det_regr', self.losses[iter_num, 3]),
+							('epoch', epoch_num)
 						]
 				    )
 
@@ -504,7 +505,7 @@ class Trainer(object):
 		# Generate row for epoch info
 		info = []
 		# add data to info list
-		info.append(epoch_num)
+		info.append(epoch_num + 1)
 		info.append(mean_overlapping_bboxes)
 		info.append(class_acc)
 		info.append(curr_loss)

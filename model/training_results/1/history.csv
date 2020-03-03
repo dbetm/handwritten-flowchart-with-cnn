@@ -1,1 +1,0 @@
-epoch_num,mean_overlapping_bboxes,class_acc,loss,loss_rpn_cls,loss_rpn_regr,loss_det_cls,loss_det_regr,time
