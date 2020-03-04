@@ -13,7 +13,7 @@ class Segementer(object):
         alphabet = string.printable[:36]
         #print(alphabet)
         recognizer = keras_ocr.recognition.Recognizer(alphabet = alphabet)
-        #recognizer.compile()
+        recognizer.compile()
         #recognizer.training_model.fit_generator(generator=keras_ocr.data_generation.get_fonts(alphabet=alphabet),steps_per_epoch=100,epochs=100)
         self.pipeline = keras_ocr.pipeline.Pipeline(recognizer = recognizer)
 
@@ -33,12 +33,13 @@ class Segementer(object):
         return results
     def segment(self):
         boxes = self.detect_text()
-        print(boxes)
+        #print(boxes)
         images = []
         for box in boxes:
             y2,y1,x2,x1 = box
             crop_img = self.image[y1:y2, x1:x2]
+            #cv2.rectangle(self.image,(x1,y2),(x2,y1),(255,255,255),-1)
             plt.imshow(crop_img)
             plt.show()
-seg = Segementer("Images/diagrama.jpg","path")
+seg = Segementer("Images/imagen1.jpg","path")
 seg.segment()
