@@ -105,9 +105,9 @@ class DataGenerator():
 
             yield x_test
     def recognize_image(self,image):
-        x = 0
-        lista = []
+        image_list = []
         x_test = image
+        x_test = cv2.cvtColor(x_test, cv2.COLOR_BGR2GRAY)
         x_test = cv2.resize(x_test,(1024, 128))
         x_test = cv2.rotate(x_test, cv2.ROTATE_90_CLOCKWISE)
         x_test = cv2.flip(x_test,1)
