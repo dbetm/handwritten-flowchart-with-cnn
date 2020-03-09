@@ -18,6 +18,9 @@ class ROIHelpers(object):
 		self.overlap_thresh = overlap_thresh
 		self.max_boxes = max_boxes
 
+	def set_overlap_thresh(self, new_overlap_thresh):
+		self.overlap_thresh = new_overlap_thresh
+
 	def calc_iou(self, R, data, class_mapping):
 		"""Calc the best IoUs considering all classes."""
 
