@@ -28,7 +28,7 @@ class ShapeModel(object):
         super(ShapeModel, self).__init__()
 
         self.dataset_path = dataset_path
-        self.num_rois = 32
+        self.num_rois = num_rois
         self.weights_input_path = weights_input_path
 
     def __generate_results_path(self, base):

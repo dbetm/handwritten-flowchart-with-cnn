@@ -233,7 +233,7 @@ class Trainer(object):
 							('rpn_regr', self.losses[iter_num, 1]),
 							('det_cls', self.losses[iter_num, 2]),
 							('det_regr', self.losses[iter_num, 3]),
-							('epoch', epoch_num)
+							('epoch', int(epoch_num + 1))
 						]
 				    )
 
@@ -492,6 +492,7 @@ class Trainer(object):
 			print('Elapsed time: {}'.format(total_time))
 
 		curr_loss = loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr
+		print('Best loss: {} vs current loss: {}'.format(best_loss, curr_loss))
 		# Update the best loss if the current loss is better.
 		if curr_loss < best_loss:
 			message = 'Total loss decreased from {} to {}, saving weights'
