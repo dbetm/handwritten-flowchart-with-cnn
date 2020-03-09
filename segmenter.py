@@ -3,6 +3,12 @@ import cv2
 import keras_ocr
 import tensorflow as tf
 import string
+from tensorflow.compat.v1.keras.backend import set_session
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+config.log_device_placement = True  # to log device placement (on which device the operation ran)
+sess = tf.compat.v1.Session(config=config)
+set_session(sess)
 class Segementer(object):
     def __init__(self,image_path,trained_model_path):
         self.image = cv2.imread(image_path)
@@ -41,5 +47,5 @@ class Segementer(object):
             #cv2.rectangle(self.image,(x1,y2),(x2,y1),(255,255,255),-1)
             plt.imshow(crop_img)
             plt.show()
-seg = Segementer("Images/imagen1.jpg","path")
+seg = Segementer("Images/diagrama.jpg","path")
 seg.segment()

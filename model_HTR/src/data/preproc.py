@@ -79,7 +79,6 @@ def augmentation(imgs,
 def normalization(imgs):
     #print("Tamaño :",imgs.shape,type(imgs[0]))
     """Normalize list of images"""
-
     imgs = np.asarray(imgs).astype(np.float32)
     _, h, w = imgs.shape
 
