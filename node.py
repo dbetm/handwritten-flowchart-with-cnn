@@ -22,3 +22,7 @@ class Node(object):
         if(self.text == None):
             return 'connector'
         return 'shape'
+    def __str__(self):
+        return "Node(coord:"+str(self.coordinate)+",class:"+str(self.class_shape)+",text:"+str(self.text)+")"
+    def __repr__(self):
+        return "Node(coord:"+str(self.coordinate)+",class:"+str(self.class_shape)+",text:"+str(self.text)+")"
