@@ -24,7 +24,36 @@ class ImageTools(object):
 		return new_width, new_height
 
 	@staticmethod
+	def get_format_img_size(image, config):
+		"""Resize image, apply substract channels means and
+		return ratio.
+		"""
+
+		img_min_side = float(config.im_size)
+
+		(height, width, _) = image.shape
+
+		# Resize the image according to the smaller side
+		if width <= height:
+			ratio = img_min_side / width
+			new_height = int(ratio * height)
+			new_width = int(img_min_side)
+		else:
+			ratio = img_min_side / height
+			new_width = int(ratio * width)
+			new_height = int(img_min_side)
+		image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
+
+		image = ImageTools.format_img_channels(image, config)
+
+		return image, ratio
+
+	@staticmethod
 	def format_img(img, config):
+		"""Resize image, apply substract channels means and
+		return factors for x-side and y-side.
+		"""
+
 		img_min_side = float(config.im_size)
 		(height,width,_) = img.shape
 
@@ -45,6 +74,14 @@ class ImageTools(object):
 			(new_width, new_height),
 			interpolation=cv2.INTER_CUBIC,
 		)
+		img = ImageTools.format_img_channels(img, config)
+		# return imagen and factors
+		return img, fx, fy
+
+	@staticmethod
+	def format_img_channels(img, config):
+		"""Format the image channels based on configuration."""
+
 		img = img[:, :, (2, 1, 0)]
 		img = img.astype(np.float32)
 		# Substract channels means
@@ -54,5 +91,18 @@ class ImageTools(object):
 		img /= config.img_scaling_factor
 		img = np.transpose(img, (2, 0, 1))
 		img = np.expand_dims(img, axis=0)
-		# return imagen and factors
-		return img, fx, fy
+
+		return img
+
+	@staticmethod
+	def get_real_coordinates(ratio, x1, y1, x2, y2):
+		"""Method to transform the coordinates of the bounding box to
+		its original size.
+		"""
+
+		real_x1 = int(round(x1 // ratio))
+		real_y1 = int(round(y1 // ratio))
+		real_x2 = int(round(x2 // ratio))
+		real_y2 = int(round(y2 // ratio))
+
+		return (real_x1, real_y1, real_x2, real_y2)
