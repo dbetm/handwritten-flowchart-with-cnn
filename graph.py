@@ -1,5 +1,6 @@
 import math
 from node import Node
+import cv2
 class Graph(object):
     def __init__(self,text_nodes,shape_nodes):
         self.text_nodes = text_nodes
@@ -59,7 +60,27 @@ class Graph(object):
         cy2 = int((coordinateB[2] + coordinateB[3]) / 2)
 
         return math.sqrt(math.pow(cx1 - cx2,2) + math.pow(cy1-cy2,2))
-
+    def rigth_or_left(self,img_path):
+        img = cv2.imread(img_path,0)
+        blur = cv2.GaussianBlur(img,(5,5),0)
+        ret3,img = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        xs,pix_n = 0,0
+        xmin = float('inf')
+        xmax = float('-inf')
+        w,h = img.shape
+        for y in range(w):
+            for x in range(h):
+                if(img[y,x] == 0):
+                    xmin = min(x,xmin)
+                    xmax = max(x,xmax)
+                    xs += x
+                    pix_n += 1
+        meanX = xs/pix_n
+        print(meanX,((xmax - xmin)/2) + xmin)
+        if(meanX < ((xmax - xmin)/2) + xmin):
+            return "left"
+        else:
+            return "right"
     def generate_graph(self):
         """
         Generate the adyacency list of the nodes starting of the relationship of the nodes
@@ -79,7 +100,7 @@ class Graph(object):
             #Calculate the distance between the node[i] and the others nodes
             if(i < len(nodes)-1):
                 #Check if nodes[i] is a arrow
-                """
+
                 point_to_compare = None
                 ac = nodes[i].get_coordinate()
                 if(nodes[i].get_class() == "arrow_line_down"):
@@ -90,14 +111,27 @@ class Graph(object):
                     point_to_compare = [(ac[2] + ac[3])/2,ac[1]]
                 elif(nodes[i].get_class() == "arrow_line_up"):
                     point_to_compare = [(ac[0] + ac[1])/2,ac[2]]
+                #Arrow rectangles
                 elif(nodes[i].get_class() == "arrow_rectangle_down"):
-                    point_to_compare = []
+                    if(self.rigth_or_left(nodes[i].get_image_path()) == "left"):
+                        point_to_compare = [ac[0],ac[3]]
+                    else:
+                        point_to_compare = [ac[1],ac[3]]
                 elif(nodes[i].get_class() == "arrow_rectangle_left"):
-
+                    if(self.rigth_or_left(nodes[i].get_image_path()) == "left"):
+                        point_to_compare = [ac[0],ac[2]]
+                    else:
+                        point_to_compare = [ac[1],ac[2]]
                 elif(nodes[i].get_class() == "arrow_rectangle_right"):
-
+                    if(self.rigth_or_left(nodes[i].get_image_path()) == "left"):
+                        point_to_compare = [ac[0],ac[3]]
+                    else:
+                        point_to_compare = [ac[1],ac[3]]
                 elif(nodes[i].get_class() == "arrow_rectangle_up"):
-                """
+                    if(self.rigth_or_left(nodes[i].get_image_path()) == "left"):
+                        point_to_compare = [ac[0],ac[2]]
+                    else:
+                        point_to_compare = [ac[1],ac[2]]
 
                 for j in range(i+1,len(nodes)):
                     dist = self.calculate_distance(nodes[i],nodes[j])
@@ -107,10 +141,11 @@ class Graph(object):
                 node_distance = list(zip(distances,nodes_prompter))
                 node_distance = sorted(node_distance)
                 relationship = []
-                if(nodes[i] == "decision"):
-                    relationship = [x[1] for x in node_distance[0:1]]
+                if(nodes[i].get_class() == "decision"):
+                    relationship = [nodes.index(x[1]) for x in node_distance[0:2]]
+                    print("i in decision",relationship)
                 else:
-                    relationship.append(node_distance[0][1])
+                    relationship.append(nodes.index(node_distance[0][1]))
                 #relationship have the nodes or node that have adyacency
                 self.adj_list[i].extend(relationship)
                 visited_list[i] = 1
@@ -118,7 +153,7 @@ class Graph(object):
         print(self.adj_list)
         print("------------------------------------------")
 
-
+"""
 s1 = Node(coordinate = [302,484,45,124],class_shape = "start_end")
 s2 = Node(coordinate = [380,412,127,182],class_shape = "arrow_line_down")
 s3 = Node(coordinate = [282,497,177,263],class_shape = "process")
@@ -138,5 +173,27 @@ t4 = Node(coordinate = [350,477,494,536],text = "x=x/2")
 t5 = Node(coordinate = [367,477,650,692],text = "x+5")
 t6 = Node(coordinate = [374,452,912,959],text = "fin")
 
-g = Graph([t1,t2,t3,t4,t5,t6],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11])
+"""
+t1 = Node(coordinate = [384,600,123,189],text = "inicio")
+t2 = Node(coordinate = [375,597,378,438],text = "x=6")
+t3 = Node(coordinate = [429,570,678,750],text = "x>5")
+t4 = Node(coordinate = [402,579,960,1008],text = "verdad")
+t5 = Node(coordinate = [783,930,948,1008],text = "falso")
+t6 = Node(coordinate = [426,546,1341,1410],text = "fin")
+
+s1 = Node(coordinate = [318,675,81,231],class_shape = "start_end")
+s2 = Node(coordinate = [456,513,237,354],class_shape = "arrow_line_down")
+s3 = Node(coordinate = [306,684,354,489],class_shape = "process")
+s4 = Node(coordinate = [462,522,483,594],class_shape = "arrow_line_down")
+s5 = Node(coordinate = [345,615,588,858],class_shape = "decision")
+s6 = Node(coordinate = [612,921,702,939],class_shape = "arrow_rectangle_down",image_path="graph_images/rect_down.png")
+s7 = Node(coordinate = [438,504,849,954],class_shape = "arrow_line_down")
+s8 = Node(coordinate = [372,645,948,1125],class_shape = "print")
+s9 = Node(coordinate = [741,1059,936,1095],class_shape = "print")
+s10 = Node(coordinate = [420,471,1119,1320],class_shape = "arrow_line_down")
+s11 = Node(coordinate = [669,849,1092,1410],class_shape = "arrow_rectangle_rigth",image_path="graph_images/rect_right.png")
+s12 = Node(coordinate = [339,669,1317,1455],class_shape = "start_end")
+
+
+g = Graph([t1,t2,t3,t4,t5,t6],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12])
 g.generate_graph()

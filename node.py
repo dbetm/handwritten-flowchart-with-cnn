@@ -1,8 +1,9 @@
 class Node(object):
-    def __init__(self,coordinate,text=None,class_shape=None):
+    def __init__(self,coordinate,text=None,class_shape=None,image_path=None):
         self.coordinate = coordinate
         self.text = text
         self.class_shape = class_shape
+        self.image_path = image_path
     def get_coordinate(self):
         return self.coordinate
     def get_text(self):
@@ -22,6 +23,8 @@ class Node(object):
         if(self.text == None):
             return 'connector'
         return 'shape'
+    def get_image_path(self):
+        return self.image_path
     def __str__(self):
         return "Node(coord:"+str(self.coordinate)+",class:"+str(self.class_shape)+",text:"+str(self.text)+")"
     def __repr__(self):
