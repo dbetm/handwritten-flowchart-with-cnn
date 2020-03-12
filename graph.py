@@ -40,8 +40,28 @@ class Graph(object):
         #Delate all the nodes that are inside a shape_nodes
         for i in nodes_to_delate:
             text_nodes.remove(i)
+        if(len(text_nodes)>0):
+            #Second iteration to collapse nodes to text with arrows
+            nodes_to_delate = []
+            for i in range(len(text_nodes)):
+                min_ditance = float('inf')
+                min_node = None
+                for j in range(len(shape_nodes)):
+                    if(shape_nodes[j].get_class() in ["arrow_line_down","arrow_line_down"]):
+                        if(shape_nodes[j].get_class() == "arrow_line_down"):
+                            point_to_compare = [(ac[0] + ac[1])/2,(ac[2] + ac[3])/2]
+                        if(shape_nodes[j].get_class() == "arrow_rectangle_down"):
+                            point_to_compare = [(ac[0] + ac[1])/2,(ac[2] + ac[3])/2]
+                        dist = self.calculate_distance(point_to_compare,text_nodes[i])
+                        if(distance < min_ditance):
+                            min_ditance = distance
+                            min_node = j
+                shape_nodes[min_node].set_text(text_nodes[i].get_text())
+                nodes_to_delate.append(text_nodes[i])
+            for i in nodes_to_delate:
+                text_nodes.remove(i)        
         #Return the nodes
-        shape_nodes.extend(text_nodes)
+        #shape_nodes.extend(text_nodes)
         return shape_nodes
     def calculate_distance(self,A,B):
         """
@@ -50,12 +70,14 @@ class Graph(object):
             -Calculate the center point of the two nodes
             -Calculate the distance between the two center points
         """
-        coordinateA = A.get_coordinate()
+        if(type(A) is list):
+            cx1 = A[0]
+            cy1 = A[1]
+        else:
+            coordinateA = A.get_coordinate()
+            cx1 = int((coordinateA[0] + coordinateA[1]) / 2)
+            cy1 = int((coordinateA[2] + coordinateA[3]) / 2)
         coordinateB = B.get_coordinate()
-
-        cx1 = int((coordinateA[0] + coordinateA[1]) / 2)
-        cy1 = int((coordinateA[2] + coordinateA[3]) / 2)
-
         cx2 = int((coordinateB[0] + coordinateB[1]) / 2)
         cy2 = int((coordinateB[2] + coordinateB[3]) / 2)
 
@@ -76,7 +98,6 @@ class Graph(object):
                     xs += x
                     pix_n += 1
         meanX = xs/pix_n
-        print(meanX,((xmax - xmin)/2) + xmin)
         if(meanX < ((xmax - xmin)/2) + xmin):
             return "left"
         else:
@@ -133,8 +154,12 @@ class Graph(object):
                     else:
                         point_to_compare = [ac[1],ac[2]]
 
+
                 for j in range(i+1,len(nodes)):
-                    dist = self.calculate_distance(nodes[i],nodes[j])
+                    if(nodes[i].get_class().split('_')[0] == "arrow"):
+                        dist = self.calculate_distance(point_to_compare,nodes[j])
+                    else:
+                        dist = self.calculate_distance(nodes[i],nodes[j])
                     if(visited_list[j] == 0):
                         distances.append(dist)
                         nodes_prompter.append(nodes[j])
@@ -143,7 +168,6 @@ class Graph(object):
                 relationship = []
                 if(nodes[i].get_class() == "decision"):
                     relationship = [nodes.index(x[1]) for x in node_distance[0:2]]
-                    print("i in decision",relationship)
                 else:
                     relationship.append(nodes.index(node_distance[0][1]))
                 #relationship have the nodes or node that have adyacency
@@ -191,7 +215,7 @@ s7 = Node(coordinate = [438,504,849,954],class_shape = "arrow_line_down")
 s8 = Node(coordinate = [372,645,948,1125],class_shape = "print")
 s9 = Node(coordinate = [741,1059,936,1095],class_shape = "print")
 s10 = Node(coordinate = [420,471,1119,1320],class_shape = "arrow_line_down")
-s11 = Node(coordinate = [669,849,1092,1410],class_shape = "arrow_rectangle_rigth",image_path="graph_images/rect_right.png")
+s11 = Node(coordinate = [669,849,1092,1410],class_shape = "arrow_rectangle_right",image_path="graph_images/rect_right.png")
 s12 = Node(coordinate = [339,669,1317,1455],class_shape = "start_end")
 
 
