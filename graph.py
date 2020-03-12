@@ -25,21 +25,36 @@ class Graph(object):
         Check the text nodes that are inside of a shape node
         If a text node are inside or near of a shape node the value of the text
         set de value in shape node
+        *check if exist more than one overlaping text nodes if is the case calculate the distance
+        and the less distance it will be the true text in te shape node
         """
         text_nodes = self.text_nodes
         shape_nodes = self.shape_nodes
         nodes_to_delate = []
+        collapse_list = [None]*len(shape_nodes)
         for i in range(len(text_nodes)):
             for j in range(len(shape_nodes)):
                 if(self.is_collapse(text_nodes[i],shape_nodes[j])):
+                    #check if exist more than one
                     #Set the value of the text of the text_node that are inside of it
-                    shape_nodes[j].set_text(text_nodes[i].get_text())
-                    nodes_to_delate.append(text_nodes[i])
-                    break;
+                    if(collapse_list[j] == None):
+                        shape_nodes[j].set_text(text_nodes[i].get_text())
+                        nodes_to_delate.append(text_nodes[i])
+                        collapse_list[j] == i
+                        break;
+                    else:
+                        if(self.calculate_distance(shape_nodes[j],text_nodes[i]) < self.calculate_distance(shape_nodes[j],text_nodes[collapse_list[j]])):
+                            shape_nodes[j].set_text(text_nodes[i].get_text())
+                            nodes_to_delate.append(text_nodes[i])
+                            nodes_to_delate.remove(text_nodes[collapse_list[j]])
+                            collapse_list[j] == i
+                            break;
+
 
         #Delate all the nodes that are inside a shape_nodes
         for i in nodes_to_delate:
             text_nodes.remove(i)
+        print("leftovers",text_nodes)
         if(len(text_nodes)>0):
             #Second iteration to collapse nodes to text with arrows
             nodes_to_delate = []
@@ -47,19 +62,21 @@ class Graph(object):
                 min_ditance = float('inf')
                 min_node = None
                 for j in range(len(shape_nodes)):
-                    if(shape_nodes[j].get_class() in ["arrow_line_down","arrow_line_down"]):
+                    if(shape_nodes[j].get_class() in ["arrow_line_down","arrow_rectangle_down"]):
+                        ac = shape_nodes[j].get_coordinate()
                         if(shape_nodes[j].get_class() == "arrow_line_down"):
                             point_to_compare = [(ac[0] + ac[1])/2,(ac[2] + ac[3])/2]
                         if(shape_nodes[j].get_class() == "arrow_rectangle_down"):
                             point_to_compare = [(ac[0] + ac[1])/2,(ac[2] + ac[3])/2]
                         dist = self.calculate_distance(point_to_compare,text_nodes[i])
-                        if(distance < min_ditance):
-                            min_ditance = distance
+                        if(dist < min_ditance):
+                            min_ditance = dist
                             min_node = j
+                print("min_node",min_node)
                 shape_nodes[min_node].set_text(text_nodes[i].get_text())
                 nodes_to_delate.append(text_nodes[i])
             for i in nodes_to_delate:
-                text_nodes.remove(i)        
+                text_nodes.remove(i)
         #Return the nodes
         #shape_nodes.extend(text_nodes)
         return shape_nodes
@@ -204,6 +221,8 @@ t3 = Node(coordinate = [429,570,678,750],text = "x>5")
 t4 = Node(coordinate = [402,579,960,1008],text = "verdad")
 t5 = Node(coordinate = [783,930,948,1008],text = "falso")
 t6 = Node(coordinate = [426,546,1341,1410],text = "fin")
+t7 = Node(coordinate = [705,825,606,666],text = "si")
+t8 = Node(coordinate = [363,423,858,906],text = "no")
 
 s1 = Node(coordinate = [318,675,81,231],class_shape = "start_end")
 s2 = Node(coordinate = [456,513,237,354],class_shape = "arrow_line_down")
@@ -219,5 +238,5 @@ s11 = Node(coordinate = [669,849,1092,1410],class_shape = "arrow_rectangle_right
 s12 = Node(coordinate = [339,669,1317,1455],class_shape = "start_end")
 
 
-g = Graph([t1,t2,t3,t4,t5,t6],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12])
+g = Graph([t1,t2,t3,t4,t5,t6,t7,t8],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12])
 g.generate_graph()
