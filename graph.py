@@ -35,12 +35,12 @@ class Graph(object):
         for i in range(len(text_nodes)):
             for j in range(len(shape_nodes)):
                 if(self.is_collapse(text_nodes[i],shape_nodes[j])):
-                    #check if exist more than one
+                    #Check if exist more than one
                     #Set the value of the text of the text_node that are inside of it
                     if(collapse_list[j] == None):
                         shape_nodes[j].set_text(text_nodes[i].get_text())
                         nodes_to_delate.append(text_nodes[i])
-                        collapse_list[j] == i
+                        collapse_list[j] = i
                         break;
                     else:
                         if(self.calculate_distance(shape_nodes[j],text_nodes[i]) < self.calculate_distance(shape_nodes[j],text_nodes[collapse_list[j]])):
@@ -72,7 +72,7 @@ class Graph(object):
                         if(dist < min_ditance):
                             min_ditance = dist
                             min_node = j
-                print("min_node",min_node)
+                print("min_node",min_node,text_nodes[i])
                 shape_nodes[min_node].set_text(text_nodes[i].get_text())
                 nodes_to_delate.append(text_nodes[i])
             for i in nodes_to_delate:
@@ -127,7 +127,7 @@ class Graph(object):
         """
         nodes = self.collapse_nodes()
         print("-----------------all-----------------")
-        print(nodes)
+        print(list(enumerate(nodes)))
         print(len(nodes))
         print("---------------------------------------")
         self.adj_list = {key: [] for key in range(len(nodes))}
