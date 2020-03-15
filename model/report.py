@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 
-"""MAP (mean Average Precision) is a popular metric in measuring the
-accuracy of object detectors like Faster R-CNN, SSD, etc. Average precision
-computes the average precision value for recall value over 0 to 1.
-"""
 import os
 import cv2
 import sys
 import time
 import pickle
 import random
-from optparse import OptionParser
 
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
 from sklearn.metrics import average_precision_score
+from sklearn.metrics import classification_report, confusion_matrix
 
 from frcnn.cnn import CNN
 from frcnn.roi_helpers import ROIHelpers
@@ -25,20 +23,24 @@ from frcnn.utilities.config import Config
 from frcnn.utilities.parser import Parser
 from frcnn.utilities.image_tools import ImageTools
 
-class MAP(object):
-	"""Evaluate with mAP a model pre-trained."""
 
-	def __init__(self, annotate_path, config_path):
-		super(MAP, self).__init__()
-		self.annotate_path = annotate_path
+class Report(object):
+	"""Report generate confusion matrix, calculate mAP and estimate precision
+	and recall for each class."""
+
+	def __init__(self, results_path, dataset_path, generate_annotate=False):
+		super(Report, self).__init__()
+		self.results_path = results_path
+		self.annotate_path = results_path + "annotate.txt"
 		self.config = None
 		# Load config file
-		self.__load_config(config_path)
-		# Prepare class mapping
-		self.class_mapping = self.config.class_mapping
-		if 'bg' not in self.class_mapping:
-			self.class_mapping['bg'] = len(self.class_mapping)
-		self.class_mapping = {v: k for k, v in self.class_mapping.items()}
+		self.__load_config()
+		self.IOU_THRESHOLD = self.config.classifier_max_overlap
+		# Get class mapping from configuration
+		self.class_mapping = {v: k for k, v in self.config.class_mapping.items()}
+		# Init confusion matrix
+		dim_matriz = (len(self.class_mapping), len(self.class_mapping))
+		self.cfn_matrix = np.zeros(shape=dim_matriz)
 		# Models
 		self.model_rpn = None
 		self.model_classifier_only = None
@@ -47,9 +49,10 @@ class MAP(object):
 		self.__build_frcnn()
 		# Load data from annotation file (txt)
 		self.test_images = []
-		self.__load_data()
+		self.__load_data(dataset_path, generate_annotate)
 
-	def __load_config(self, config_path):
+	def __load_config(self):
+		config_path = self.results_path + "config.pickle"
 		with open(config_path, 'rb') as f_in:
 			self.config = pickle.load(f_in)
 
@@ -102,26 +105,29 @@ class MAP(object):
 		self.model_rpn.compile(optimizer='sgd', loss='mse')
 		self.model_classifier.compile(optimizer='sgd', loss='mse')
 
-	def __load_data(self):
+	def __load_data(self, dataset_path, generate_annotate):
 		parser = Parser(
-			dataset_path="/home/david/Escritorio/flowchart-3b(splitter)",
+			dataset_path=dataset_path,
 			annotate_path=self.annotate_path,
 		)
 		# Recover image paths
-		all_imgs, _, _ = parser.get_data(generate_annotate=False)
+		all_imgs, _, _ = parser.get_data(generate_annotate=generate_annotate)
 		self.test_images = [s for s in all_imgs if s['imageset'] == 'test']
 		random.shuffle(self.test_images)
 
-	def measure_map(self):
-		"""Measure AP for each test/validation images class and finally the
-		mAP.
+	def generate(self):
+		"""Predict objects and compare with ground-truth for estimate metrics in the
+		object detection task.
 		"""
 
+		global_time_init = time.time()
 		GT = {}
-		Predicted = {} # confidence score for each
+		Predicted = {} # confidence score for each test image
 		cont = 0
 		# Iterate above all images
 		for idx, img_data in enumerate(self.test_images):
+			# if(cont > 0):
+			# 	break
 			print('{}/{}'.format(idx,len(self.test_images)))
 			st = time.time()
 
@@ -136,7 +142,7 @@ class MAP(object):
 			# Instance a ROI Heper
 			roi_helper = ROIHelpers(
 				self.config,
-				overlap_thresh=0.7,
+				overlap_thresh=self.IOU_THRESHOLD,
 			)
 			R = roi_helper.convert_rpn_to_roi(Y1, Y2)
 
@@ -154,6 +160,7 @@ class MAP(object):
 			print('Elapsed time = {}'.format(time.time() - st))
 
 			t, p = self.__get_map(all_dets, img_data['bboxes'], (fx, fy))
+			self.__update_confusion_matrix(all_dets, img_data['bboxes'], (fx, fy))
 
 			for key in t.keys():
 				if key not in GT:
@@ -161,16 +168,32 @@ class MAP(object):
 					Predicted[key] = []
 				GT[key].extend(t[key])
 				Predicted[key].extend(p[key])
-			all_aps = []
-			for key in GT.keys():
-				ap = average_precision_score(GT[key], Predicted[key])
-				print('{} AP: {}'.format(key, ap))
-				all_aps.append(ap)
-			print('mAP = {}'.format(np.mean(np.array(all_aps))))
-			cont += 1
-			print(GT)
-			print(Predicted)
-		print("Number of test images: ", cont)
+				cont += 1
+
+
+		self.mAP_file = open(self.results_path + "mAP.txt", "x")
+		self.mAP_file.write("AP for each class\n")
+		# Calculate AP for each class and mAP finally
+		# Write results in file mAP.txt
+		all_aps = []
+		for key in GT.keys():
+			ap = average_precision_score(GT[key], Predicted[key])
+			print('{} AP: {}'.format(key, ap))
+			self.mAP_file.write('{} AP: {}\n'.format(key, ap))
+			all_aps.append(ap)
+
+		mAP = np.mean(np.array(all_aps))
+		print('mAP = {}'.format(mAP))
+		self.mAP_file.write('\nmAP = {}\n'.format(mAP))
+		# print(GT)
+		# print(Predicted)
+		msg = "Number of test images: " + str(cont)
+		print(msg)
+		self.mAP_file.write(msg)
+		self.mAP_file.close()
+		print('Total elapsed time = {}'.format(time.time() - global_time_init))
+
+		self.__save_classification_report()
 
 	def __apply_spatial_pyramid_pooling(self, roi, F):
 		# apply the spatial pyramid pooling to the proposed regions
@@ -228,11 +251,11 @@ class MAP(object):
 		return bboxes, probs
 
 	def __apply_non_max_sup_for_each_class(self, bboxes, probs, roi_helper):
-		all_dets = []
+		all_dets = [] # all detections
 		# Apply non max suppression for each class
 		for key in bboxes:
 			bbox = np.array(bboxes[key])
-			roi_helper.set_overlap_thresh(0.1)
+			# roi_helper.set_overlap_thresh(0.1)
 			new_boxes, new_probs = roi_helper.apply_non_max_suppression_fast(
 				bbox,
 				np.array(probs[key])
@@ -274,8 +297,8 @@ class MAP(object):
 				P[pred_class] = []
 				T[pred_class] = []
 			P[pred_class].append(pred_prob)
-			found_match = False
 
+			found_match = False
 			for gt_box in gt:
 				gt_class = gt_box['class']
 				gt_x1 = gt_box['x1'] / fx
@@ -291,7 +314,7 @@ class MAP(object):
 					(pred_x1, pred_y1, pred_x2, pred_y2),
 					(gt_x1, gt_y1, gt_x2, gt_y2)
 				)
-				if iou >= 0.5:
+				if iou >= self.IOU_THRESHOLD:
 					found_match = True
 					gt_box['bbox_matched'] = True
 					break
@@ -311,10 +334,142 @@ class MAP(object):
 
 		return T, P
 
-if __name__ == '__main__':
-	results_path = "training_results/5"
-	annotate_path = results_path + "/annotate2.txt"
-	config_path = results_path + "/config.pickle"
-	map = MAP(annotate_path=annotate_path, config_path=config_path)
+	def __update_confusion_matrix(self, pred, gt, factors):
+		fx, fy = factors
+		# NOTA: Implementation algorithm based in:
+		# https://github.com/svpino/tf_object_detection_cm/blob/master/confusion_matrix.py
+		matches = []
+		detection_classes = [d['class'] for d in pred]
+		# For each ground-truth object get the IoU with each detected object
+		for i in range(len(gt)):
+			gt_x1 = gt[i]['x1'] / fx
+			gt_x2 = gt[i]['x2'] / fx
+			gt_y1 = gt[i]['y1'] / fy
+			gt_y2 = gt[i]['y2'] / fy
 
-	map.measure_map()
+			for j in range(len(pred)):
+				pred_x1 = pred[j]['x1']
+				pred_x2 = pred[j]['x2']
+				pred_y1 = pred[j]['y1']
+				pred_y2 = pred[j]['y2']
+				iou = Metrics.iou(
+					(pred_x1, pred_y1, pred_x2, pred_y2),
+					(gt_x1, gt_y1, gt_x2, gt_y2)
+				)
+				if iou >= self.IOU_THRESHOLD:
+					matches.append([i, j, iou])
+
+		matches = np.array(matches)
+		# Prune match list
+		if(matches.shape[0] > 0):
+			""" Sort list of matches by descending IoU so we can remove
+			duplicate detections while keeping the highest IoU entry.
+			"""
+			matches = matches[matches[:, 2].argsort()[::-1][:len(matches)]]
+			# Remove duplicate detections from the list.
+			matches = matches[np.unique(matches[:,1], return_index=True)[1]]
+			""" Sort the list again by descending IoU. Removing duplicates
+			doesn't preserve our previous sort.
+			"""
+			matches = matches[matches[:, 2].argsort()[::-1][:len(matches)]]
+			# Remove duplicate ground truths from the list.
+			matches = matches[np.unique(matches[:,0], return_index=True)[1]]
+
+		for i in range(len(gt)):
+			row = self.config.class_mapping[gt[i]['class']]
+
+			if matches.shape[0] > 0 and matches[matches[:,0] == i].shape[0] == 1:
+				key = detection_classes[int(matches[matches[:,0] == i, 1][0])]
+				col = self.config.class_mapping[key]
+				self.cfn_matrix[row][col] += 1
+			else:
+				self.cfn_matrix[row][self.cfn_matrix.shape[1] - 1] += 1
+
+		for i in range(len(pred)):
+			if matches.shape[0] > 0 and matches[matches[:,1] == i].shape[0] == 0:
+				col = self.config.class_mapping[detection_classes[i]]
+				self.cfn_matrix[self.cfn_matrix.shape[0] - 1][col] += 1
+
+	def __save_classification_report(self):
+		# y_true = []
+		# y_pred = []
+		categories = list(self.config.class_mapping.keys())
+		# Show confusion matrix (text mode)
+		print("."*50 + "\nConfusion matrix")
+		print(self.cfn_matrix)
+		# Save confusion matrix (txt)
+		cnf_matrix_path = self.results_path + "confusion_matrix.txt"
+		np.savetxt(cnf_matrix_path, self.cfn_matrix, fmt="%0.2f")
+		# Save confusion matrix (png)
+		cnf_matrix_path = self.results_path + "confusion_matrix.png"
+		fig = plt.figure(figsize=(10,10))
+		plt.imshow(self.cfn_matrix, interpolation='nearest')
+		plt.colorbar()
+		tick_marks = np.arange(len(categories))
+		_ = plt.xticks(tick_marks, categories, rotation=90)
+		_ = plt.yticks(tick_marks, categories)
+		plt.xlabel("Predicted")
+		plt.ylabel("Ground-truth")
+		plt.savefig(cnf_matrix_path, dpi=fig.dpi)
+
+		# Generate results (classification report) and display them
+		results = []
+		for i in range(len(categories)):
+			id = i
+			name = categories[id]
+
+			total_target = np.sum(self.cfn_matrix[id,:])
+			total_predicted = np.sum(self.cfn_matrix[:,id])
+
+			precision = float(self.cfn_matrix[id, id] / total_predicted)
+			recall = float(self.cfn_matrix[id, id] / total_target)
+
+			results.append(
+				{
+					'category' : name,
+					'precision {} IoU'.format(self.IOU_THRESHOLD) : precision,
+					'recall {} IoU'.format(self.IOU_THRESHOLD) : recall
+				}
+			)
+
+		df = pd.DataFrame(results)
+		print("."*50 + "\nClassification report")
+		print(df)
+		classification_report_path = self.results_path + "classification_report.csv"
+		df.to_csv(classification_report_path)
+
+		# Display confusion matrix image
+		plt.show()
+
+		# bd_id_class = self.config.class_mapping["bg"]
+		#
+		# for key, value in gt.items():
+		# 	id_cls = self.config.class_mapping[key]
+		#
+		# 	n = len(value)
+		# 	pred_value = predicted[key]
+		#
+		# 	for i in range(n):
+		# 		# index y_true
+		# 		if(value[i] == 1): # positive true
+		# 			y_true.append(id_cls)
+		# 		else:
+		# 			y_true.append(bd_id_class)
+		# 		# index y_pred
+		# 		if(pred_value[i] == 0):
+		# 			y_pred.append(bd_id_class)
+		# 		else:
+		# 			y_pred.append(id_cls)
+		#
+		# print(y_true)
+		# print(y_pred)
+		# print(target_names)
+		# print(classification_report(y_true, y_pred, target_names=target_names))
+		# cnfn_matrix = confusion_matrix(y_true, y_pred)
+
+
+if __name__ == '__main__':
+	results_path = "training_results/5/"
+	dataset_path = "/home/david/Escritorio/flowchart-3b(splitter)"
+	report = Report(results_path=results_path, dataset_path=dataset_path)
+	report.generate()

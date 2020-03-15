@@ -46,7 +46,7 @@ class Parser(object):
 					val_to_switch = self.class_mapping['bg']
 					self.class_mapping['bg'] = length - 1
 					self.class_mapping[key_to_switch] = val_to_switch
-
+			f.close()
 			return all_data, self.classes_count, self.class_mapping
 
 	def __read_line(self, line):
