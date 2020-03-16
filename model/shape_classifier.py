@@ -154,6 +154,7 @@ class ShapeClassifier(object):
 		except Exception as e:
 			print('Exception: {}'.format(e))
 			print("Couldn't load pretrained model weights!")
+			exit()
 
 	def __compile_models(self):
 		"""Compile the models."""
@@ -224,7 +225,7 @@ class ShapeClassifier(object):
 		return bboxes, probs
 
 	def __generate_final_image(self, bboxes, probs, img, roi_helper, ratio):
-		"""Add rectangles of bounding boxes of task detection in 
+		"""Add rectangles of bounding boxes of task detection in
 		original image, add caption and probability of classification.
 		"""
 

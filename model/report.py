@@ -98,6 +98,7 @@ class Report(object):
 		except Exception as e:
 			print('Exception: {}'.format(e))
 			print("Couldn't load pretrained model weights!")
+			exit()
 
 	def __compile_models(self):
 		"""Compile the models."""
@@ -123,16 +124,17 @@ class Report(object):
 		global_time_init = time.time()
 		GT = {}
 		Predicted = {} # confidence score for each test image
-		cont = 0
+		total_detected = 0
+		total_gt = 0
 		# Iterate above all images
 		for idx, img_data in enumerate(self.test_images):
-			# if(cont > 0):
-			# 	break
 			print('{}/{}'.format(idx,len(self.test_images)))
 			st = time.time()
 
 			filepath = img_data['filepath']
 			img = cv2.imread(filepath)
+
+			total_gt += len(img_data['bboxes'])
 			# The resized image and the factors for each dimension are obtained-
 			X, fx, fy = ImageTools.format_img(img, self.config)
 			X = np.transpose(X, (0, 2, 3, 1))
@@ -157,6 +159,7 @@ class Report(object):
 				probs,
 				roi_helper
 			)
+			total_detected += len(all_dets)
 			print('Elapsed time = {}'.format(time.time() - st))
 
 			t, p = self.__get_map(all_dets, img_data['bboxes'], (fx, fy))
@@ -168,11 +171,11 @@ class Report(object):
 					Predicted[key] = []
 				GT[key].extend(t[key])
 				Predicted[key].extend(p[key])
-				cont += 1
 
-
+		msg = "\nAP for each class:\n\n"
+		print("."*45 + msg)
 		self.mAP_file = open(self.results_path + "mAP.txt", "x")
-		self.mAP_file.write("AP for each class\n")
+		self.mAP_file.write(msg)
 		# Calculate AP for each class and mAP finally
 		# Write results in file mAP.txt
 		all_aps = []
@@ -185,9 +188,13 @@ class Report(object):
 		mAP = np.mean(np.array(all_aps))
 		print('mAP = {}'.format(mAP))
 		self.mAP_file.write('\nmAP = {}\n'.format(mAP))
+		print('Total objects detected = {}'.format(total_detected))
+		self.mAP_file.write('Total objects detected = {}\n'.format(total_detected))
+		print('Total objects ground-truth = {}'.format(total_gt))
+		self.mAP_file.write('Total objects ground-truth = {}\n'.format(total_gt))
 		# print(GT)
 		# print(Predicted)
-		msg = "Number of test images: " + str(cont)
+		msg = "Number of test images = " + str(len(self.test_images))
 		print(msg)
 		self.mAP_file.write(msg)
 		self.mAP_file.close()
@@ -255,7 +262,7 @@ class Report(object):
 		# Apply non max suppression for each class
 		for key in bboxes:
 			bbox = np.array(bboxes[key])
-			# roi_helper.set_overlap_thresh(0.1)
+			roi_helper.set_overlap_thresh(0.1)
 			new_boxes, new_probs = roi_helper.apply_non_max_suppression_fast(
 				bbox,
 				np.array(probs[key])
@@ -399,7 +406,7 @@ class Report(object):
 		print(self.cfn_matrix)
 		# Save confusion matrix (txt)
 		cnf_matrix_path = self.results_path + "confusion_matrix.txt"
-		np.savetxt(cnf_matrix_path, self.cfn_matrix, fmt="%0.2f")
+		np.savetxt(cnf_matrix_path, self.cfn_matrix, fmt="%d")
 		# Save confusion matrix (png)
 		cnf_matrix_path = self.results_path + "confusion_matrix.png"
 		fig = plt.figure(figsize=(10,10))
@@ -410,7 +417,8 @@ class Report(object):
 		_ = plt.yticks(tick_marks, categories)
 		plt.xlabel("Predicted")
 		plt.ylabel("Ground-truth")
-		plt.savefig(cnf_matrix_path, dpi=fig.dpi)
+		plt.tight_layout()
+		plt.savefig(cnf_matrix_path, dpi=300)
 
 		# Generate results (classification report) and display them
 		results = []
@@ -440,32 +448,6 @@ class Report(object):
 
 		# Display confusion matrix image
 		plt.show()
-
-		# bd_id_class = self.config.class_mapping["bg"]
-		#
-		# for key, value in gt.items():
-		# 	id_cls = self.config.class_mapping[key]
-		#
-		# 	n = len(value)
-		# 	pred_value = predicted[key]
-		#
-		# 	for i in range(n):
-		# 		# index y_true
-		# 		if(value[i] == 1): # positive true
-		# 			y_true.append(id_cls)
-		# 		else:
-		# 			y_true.append(bd_id_class)
-		# 		# index y_pred
-		# 		if(pred_value[i] == 0):
-		# 			y_pred.append(bd_id_class)
-		# 		else:
-		# 			y_pred.append(id_cls)
-		#
-		# print(y_true)
-		# print(y_pred)
-		# print(target_names)
-		# print(classification_report(y_true, y_pred, target_names=target_names))
-		# cnfn_matrix = confusion_matrix(y_true, y_pred)
 
 
 if __name__ == '__main__':
