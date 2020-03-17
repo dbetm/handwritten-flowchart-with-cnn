@@ -135,11 +135,11 @@ class Parser(object):
 				image_path = base + "/" + (item.split(".")[0]) + ".jpg"
 				for node in parsedXML.getroot().iter('object'):
 					xmin = int(node.find('bndbox/xmin').text)
-					xmax = int(node.find('bndbox/xmax').text)
 					ymin = int(node.find('bndbox/ymin').text)
+					xmax = int(node.find('bndbox/xmax').text)
 					ymax = int(node.find('bndbox/ymax').text)
 					_class = node.find('name').text
-					row = [image_path, xmin, xmax, ymin, ymax, _class, type]
+					row = [image_path, xmin, ymin, xmax, ymax, _class, type]
 					data.append(row)
 
 		return data

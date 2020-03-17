@@ -112,7 +112,7 @@ if __name__ == '__main__':
 	#     num_epochs=1,
 	# )
 
-	shape_model.generate_classification_report(
-		results_path = "training_results/10/",
-		generate_annotate=False
-	)
+	# shape_model.generate_classification_report(
+	# 	results_path = "training_results/19/",
+	# 	generate_annotate=True
+	# )
