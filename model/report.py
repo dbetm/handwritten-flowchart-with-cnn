@@ -28,7 +28,7 @@ class Report(object):
 	"""Report generate confusion matrix, calculate mAP and estimate precision
 	and recall for each class."""
 
-	def __init__(self, results_path, dataset_path, generate_annotate=False):
+	def __init__(self, results_path, dataset_path, generate_annotate=False, use_gpu=False):
 		super(Report, self).__init__()
 		self.results_path = results_path
 		self.annotate_path = results_path + "annotate.txt"
@@ -41,6 +41,8 @@ class Report(object):
 		# Init confusion matrix
 		dim_matriz = (len(self.class_mapping), len(self.class_mapping))
 		self.cfn_matrix = np.zeros(shape=dim_matriz)
+		if(use_gpu):
+			self.__setup()
 		# Models
 		self.model_rpn = None
 		self.model_classifier_only = None
@@ -50,6 +52,14 @@ class Report(object):
 		# Load data from annotation file (txt)
 		self.test_images = []
 		self.__load_data(dataset_path, generate_annotate)
+
+	def __setup(self):
+		config_gpu = tf.compat.v1.ConfigProto()
+		# dynamically grow the memory used on the GPU
+		config_gpu.gpu_options.allow_growth = True
+		# to log device placement (on which device the operation ran)
+		config_gpu.log_device_placement = True
+		sess = tf.compat.v1.Session(config=config_gpu)
 
 	def __load_config(self):
 		config_path = self.results_path + "config.pickle"
@@ -451,7 +461,7 @@ class Report(object):
 
 
 if __name__ == '__main__':
-	results_path = "training_results/5/"
-	dataset_path = "/home/david/Escritorio/flowchart-3b(splitter)"
-	report = Report(results_path=results_path, dataset_path=dataset_path)
+	results_path = "training_results/1/"
+	dataset_path = "/home/octocat/Escritorio/flowchart-3b(splitter)"
+	report = Report(results_path=results_path, dataset_path=dataset_path, use_gpu=True)
 	report.generate()

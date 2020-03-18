@@ -4,13 +4,13 @@ import random
 import pprint
 import sys
 import time
-import numpy as np
-from optparse import OptionParser
 import pickle
 import logging
 import traceback
-import tensorflow as tf
+from optparse import OptionParser
 
+import numpy as np
+import tensorflow as tf
 from keras import backend as K
 from keras.optimizers import Adam, SGD, RMSprop
 from keras.layers import Input
@@ -67,6 +67,7 @@ class Trainer(object):
 
 	def __setup(self):
 		"""System and session, setup."""
+
 		sys.setrecursionlimit(40000)
 		logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 		if(self.config.use_gpu):

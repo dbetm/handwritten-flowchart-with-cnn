@@ -102,15 +102,19 @@ class ShapeModel(object):
 
 if __name__ == '__main__':
 	shape_model = ShapeModel(
-		dataset_path="/home/david/Escritorio/flowchart-3b(splitter)",
-		num_rois=32
+		dataset_path="/home/octocat/Escritorio/flowchart-3b(splitter)",
+		num_rois=32,
+		# weights_input_path="training_results/1/flowchart_3b_model.hdf5"
+		# weights_input_path="vgg16_weights_tf_dim_ordering_tf_kernels.h5"
 	)
 	# testing train
-	# shape_model.train(
-	#     horizontal_flips=False,
-	#     vertical_flips=False,
-	#     num_epochs=1,
-	# )
+	shape_model.train(
+	    horizontal_flips=False,
+	    vertical_flips=False,
+	    num_epochs=5,
+		learning_rate=1e-5,
+		use_gpu=True
+	)
 
 	# shape_model.generate_classification_report(
 	# 	results_path = "training_results/19/",

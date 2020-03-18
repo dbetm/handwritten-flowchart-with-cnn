@@ -88,9 +88,11 @@ class ShapeClassifier(object):
 
 		print('Elapsed time = {}'.format(time.time() - st))
 		if(save_image):
-			filepath = self.results_path + "/testing/"
-			cv2.imwrite(filepath + image_name, img)
-			print("Image {}, save in {}".format(image_name, filepath))
+			test_path = self.results_path + "/testing/"
+			if(!os.path.isdir(test_path)):
+				os.mkdir(test_path)
+			cv2.imwrite(test_path + image_name, img)
+			print("Image {}, save in {}".format(image_name, test_path))
 
 	def __load_config(self, results_path):
 		"""Open .pickle file that contains configuration params of F R-CNN."""
@@ -313,7 +315,7 @@ class ShapeClassifier(object):
 if __name__ == '__main__':
 	classifier = ShapeClassifier("training_results/1", use_gpu=False)
 
-	base_path = "/home/david/Escritorio/images_test_flowchart-3b/"
+	base_path = "/home/octocat/Escritorio/images_test_flowchart-3b/"
 
 	for i in range(1, 15+1):
 		img_path = base_path + str(i) + ".jpg"
