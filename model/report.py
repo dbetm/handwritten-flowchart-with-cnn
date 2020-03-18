@@ -9,6 +9,7 @@ import random
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 import matplotlib.pyplot as plt
 from keras import backend as K
 from keras.layers import Input
