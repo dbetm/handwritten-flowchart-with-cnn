@@ -28,7 +28,7 @@ class ShapeClassifier(object):
 	trained model and using Faster R-CNN like architecture.
 	"""
 
-	def __init__(self, results_path, bbox_threshold=0.5):
+	def __init__(self, results_path, bbox_threshold=0.5, use_gpu=False):
 		super(ShapeClassifier, self).__init__()
 		self.results_path = results_path
 		self.config = None
@@ -42,8 +42,18 @@ class ShapeClassifier(object):
 			self.class_mapping[v]:
 				np.random.randint(0, 255, 3) for v in self.class_mapping
 		}
+		if(use_gpu):
+			self.__setup()
 		# Build Faster R-CNN
 		self.__build_frcnn()
+
+	def __setup(self):
+		config_gpu = tf.compat.v1.ConfigProto()
+		# dynamically grow the memory used on the GPU
+		config_gpu.gpu_options.allow_growth = True
+		# to log device placement (on which device the operation ran)
+		config_gpu.log_device_placement = True
+		sess = tf.compat.v1.Session(config=config_gpu)
 
 	def predict(self, image, image_name, save_image=True):
 		"""Perform object detection, in this case elements of flowchart."""
@@ -299,12 +309,16 @@ class ShapeClassifier(object):
 		print(all_dets)
 		return img, new_boxes, new_probs
 
+
 if __name__ == '__main__':
-	classifier = ShapeClassifier("training_results/7")
+	classifier = ShapeClassifier("training_results/1", use_gpu=False)
 
 	base_path = "/home/david/Escritorio/images_test_flowchart-3b/"
 
-	for i in range(14):
+	for i in range(1, 15+1):
 		img_path = base_path + str(i) + ".jpg"
 		img = cv2.imread(img_path)
+		# cv2.imshow('test', img)
+		# cv2.waitKey(0)
+		# cv2.destroyAllWindows()
 		classifier.predict(img, str(i) + ".jpg")
