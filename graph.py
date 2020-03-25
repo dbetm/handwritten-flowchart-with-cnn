@@ -33,26 +33,25 @@ class Graph(object):
         text_nodes = self.text_nodes
         shape_nodes = self.shape_nodes
         nodes_to_delate = []
-        collapse_list = [None]*len(shape_nodes)
-        for i in range(len(text_nodes)):
-            for j in range(len(shape_nodes)):
-                if(self.is_collapse(text_nodes[i],shape_nodes[j])):
+        collapse_list = [None]*len(text_nodes)
+        for i in range(len(shape_nodes)):
+            for j in range(len(text_nodes)):
+                if(self.is_collapse(shape_nodes[i],text_nodes[j])):
                     #Check if exist more than one
                     #Set the value of the text of the text_node that are inside of it
                     if(collapse_list[j] == None):
-                        shape_nodes[j].set_text(text_nodes[i].get_text())
-                        nodes_to_delate.append(text_nodes[i])
+                        shape_nodes[i].set_text(text_nodes[j].get_text())
+                        nodes_to_delate.append(text_nodes[j])
                         collapse_list[j] = i
                         break;
                     else:
-                        if(self.calculate_distance(shape_nodes[j],text_nodes[i]) < self.calculate_distance(shape_nodes[j],text_nodes[collapse_list[j]])):
-                            shape_nodes[j].set_text(text_nodes[i].get_text())
-                            nodes_to_delate.append(text_nodes[i])
-                            nodes_to_delate.remove(text_nodes[collapse_list[j]])
+                        if(self.calculate_distance(shape_nodes[i],text_nodes[j]) < self.calculate_distance(text_nodes[j],shape_nodes[collapse_list[j]])):
+                            shape_nodes[collapse_list[j]].set_text(None)
+                            shape_nodes[i].set_text(text_nodes[j].get_text())
                             collapse_list[j] == i
                             break;
 
-
+                            """
         #Delate all the nodes that are inside a shape_nodes
         for i in nodes_to_delate:
             text_nodes.remove(i)
@@ -80,7 +79,7 @@ class Graph(object):
             for i in nodes_to_delate:
                 text_nodes.remove(i)
         #Return the nodes
-        #shape_nodes.extend(text_nodes)
+        #shape_nodes.extend(text_nodes)"""
         return shape_nodes
     def calculate_distance(self,A,B):
         """
@@ -228,24 +227,23 @@ class Graph(object):
                         return "NV"
             #if is decision
             elif(self.nodes[node_index].get_class() == "decision"):
-                for i in range(len(self.nodes)):
-                    if(node_index != i and self.can_visit(node_index,i)):
-                        distance = self.calculate_distance(self.nodes[node_index],self.nodes[i])
-                        distances.append(distance)
-                        nodes_prompter.append(i)
-                node_distance = list(zip(distances,nodes_prompter))
-                node_distance = sorted(node_distance)
-                to_check = node_distance[0:2]
-                if(self.is_any_arrow(self.nodes[to_check[0][1]]) and  self.is_any_arrow(self.nodes[to_check[1][1]])):
-                    self.adj_list[node_index].append(to_check[0][1])
-                    self.adj_list[node_index].append(to_check[1][1])
-                    self.visited_list[node_index] += 1
-                    a = self.find_next(to_check[0][1])
-                    b = self.find_next(to_check[1][1])
-                    if(a == "NV" or b == "NV"):
-                        print("in decusion NV")
-                else:
-                    return "NV"
+                if(self.visited_list[node_index]==0):
+                    for i in range(len(self.nodes)):
+                        if(node_index != i and self.can_visit(node_index,i)):
+                            distance = self.calculate_distance(self.nodes[node_index],self.nodes[i])
+                            distances.append(distance)
+                            nodes_prompter.append(i)
+                    node_distance = list(zip(distances,nodes_prompter))
+                    node_distance = sorted(node_distance)
+                    to_check = node_distance[0:2]
+                    if(self.is_any_arrow(self.nodes[to_check[0][1]]) and self.is_any_arrow(self.nodes[to_check[1][1]])):
+                        self.adj_list[node_index].append(to_check[0][1])
+                        self.adj_list[node_index].append(to_check[1][1])
+                        self.visited_list[node_index] += 1
+                        a = self.find_next(to_check[0][1])
+                        b = self.find_next(to_check[1][1])
+                    else:
+                        return str(node_index)+"NV"
 
 
     def generate_graph(self):
@@ -255,10 +253,10 @@ class Graph(object):
         *Check the cases arrow-rectangle/arrow line
         """
         self.nodes = self.collapse_nodes()
-        print("-----------------all-----------------")
-        print(list(enumerate(self.nodes)))
-        print(len(self.nodes))
-        print("---------------------------------------")
+        #print("-----------------all-----------------")
+        #print(list(enumerate(self.nodes)))
+        #print(len(self.nodes))
+        #print("---------------------------------------")
         self.adj_list = {key: [] for key in range(len(self.nodes))}
         self.visited_list = [0]*len(self.nodes)
         first_state = self.find_first_state()
