@@ -24,7 +24,7 @@ class Checker(object):
 			annotate_path=self.annotate_path,
 		)
 		# Recover image paths
-		self.all_imgs, _, _ = parser.get_data(generate_annotate=True)
+		self.all_imgs, _, _ = parser.get_data(generate_annotate=False)
 		# random.shuffle(self.all_imgs)
 
 	def show_samples(self, num_imgs):
@@ -95,10 +95,10 @@ class Checker(object):
 
 if __name__ == '__main__':
 	dataset_path = "/home/david/Escritorio/flowchart-3b(splitter)"
-	annotate_path = "/home/david/Escritorio/handwritten-flowchart-with-cnn/model/training_results/5/annotate3.txt"
+	annotate_path = "/home/david/Escritorio/handwritten-flowchart-with-cnn/model/training_results/2/annotate2.txt"
 	checker = Checker(
 		dataset_path=dataset_path,
 		annotate_path=annotate_path
 	)
 
-	checker.show_samples(3)
+	checker.show_samples(150)

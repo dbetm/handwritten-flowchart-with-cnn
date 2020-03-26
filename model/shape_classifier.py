@@ -28,13 +28,23 @@ class ShapeClassifier(object):
 	trained model and using Faster R-CNN like architecture.
 	"""
 
-	def __init__(self, results_path, bbox_threshold=0.5, use_gpu=False):
+	def __init__(
+		self,
+		results_path,
+		bbox_threshold=0.5,
+		overlap_thresh_1=0.5,
+		overlap_thresh_2=0.3,
+		use_gpu=False
+		):
 		super(ShapeClassifier, self).__init__()
 		self.results_path = results_path
 		self.config = None
 		self.__load_config(results_path)
 		self.class_mapping = self.config.class_mapping
+		# Thresholds
 		self.bbox_threshold = bbox_threshold
+		self.overlap_thresh_1 = overlap_thresh_1
+		self.overlap_thresh_2 = overlap_thresh_2
 		# Invert dictionary of classes
 		self.class_mapping = {v: k for k, v in self.class_mapping.items()}
 		# Assign a color for each class
@@ -55,7 +65,7 @@ class ShapeClassifier(object):
 		config_gpu.log_device_placement = True
 		sess = tf.compat.v1.Session(config=config_gpu)
 
-	def predict(self, image, image_name, save_image=True):
+	def predict(self, image, image_name, n, save_image=True):
 		"""Perform object detection, in this case elements of flowchart."""
 
 		st = time.time() # start time
@@ -69,7 +79,7 @@ class ShapeClassifier(object):
 		# Instance a ROI Heper
 		roi_helper = ROIHelpers(
 			self.config,
-			overlap_thresh=0.5,
+			overlap_thresh=self.overlap_thresh_1
 		)
 		R = roi_helper.convert_rpn_to_roi(Y1, Y2)
 		# convert from (x1,y1,x2,y2) to (x,y,w,h)
@@ -88,9 +98,15 @@ class ShapeClassifier(object):
 
 		print('Elapsed time = {}'.format(time.time() - st))
 		if(save_image):
-			test_path = self.results_path + "/testing/"
-			if(!os.path.isdir(test_path)):
+			test_path = self.results_path + "/test3_results/"
+			if(n == 1):
+				test_path = self.results_path + "/test1_results/"
+			elif(n == 2):
+				test_path = self.results_path + "/test2_results/"
+
+			if(os.path.isdir(test_path) == False):
 				os.mkdir(test_path)
+
 			cv2.imwrite(test_path + image_name, img)
 			print("Image {}, save in {}".format(image_name, test_path))
 
@@ -103,7 +119,8 @@ class ShapeClassifier(object):
 				self.config = pickle.load(f_in)
 				print("Config loaded successful!!")
 		except Exception as e:
-			print("Could not load configuration file, ¡check results path!")
+			print("Could not load configuration file, check results path!")
+			exit()
 
 	def __get_real_coordinates(ratio, x1, y1, x2, y2):
 		"""Method to transform the coordinates of the bounding box to its
@@ -248,7 +265,7 @@ class ShapeClassifier(object):
 		for key in bboxes:
 			bbox = np.array(bboxes[key])
 			# apply non max suppression algorithm
-			roi_helper.set_overlap_thresh(0.7)
+			roi_helper.set_overlap_thresh(self.overlap_thresh_2)
 			new_boxes, new_probs = roi_helper.apply_non_max_suppression_fast(
 				bbox,
 				np.array(probs[key])
@@ -313,14 +330,35 @@ class ShapeClassifier(object):
 
 
 if __name__ == '__main__':
-	classifier = ShapeClassifier("training_results/1", use_gpu=False)
+	folder_numer = input("Type num folder of training results: ")
 
-	base_path = "/home/octocat/Escritorio/images_test_flowchart-3b/"
+	classifier = ShapeClassifier(
+		"training_results/" + folder_numer,
+		use_gpu=False,
+		overlap_thresh_1=0.7,
+		overlap_thresh_2=0.1,
+		bbox_threshold=0.7
+	)
 
-	for i in range(1, 15+1):
-		img_path = base_path + str(i) + ".jpg"
+	print("1) set 1 - original")
+	print("2) set 2 - improved")
+	print("3 miniset - A4 background")
+	n = int(input(">> "))
+
+	limite = 16
+	test_path = "/home/david/Escritorio/miniset/"
+	if(n == 1):
+		test_path = "/home/david/Escritorio/set1/"
+		limite = 48
+	elif(n == 2):
+		test_path = "/home/david/Escritorio/set2/"
+		limite = 48
+
+
+	for i in range(1, limite+1):
+		img_path = test_path + str(i) + ".jpg"
 		img = cv2.imread(img_path)
 		# cv2.imshow('test', img)
 		# cv2.waitKey(0)
 		# cv2.destroyAllWindows()
-		classifier.predict(img, str(i) + ".jpg")
+		classifier.predict(img, str(i) + ".jpg", n)
