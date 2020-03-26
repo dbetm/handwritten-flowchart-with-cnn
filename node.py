@@ -28,4 +28,5 @@ class Node(object):
     def __str__(self):
         return "Node(coord:"+str(self.coordinate)+",class:"+str(self.class_shape)+",text:"+str(self.text)+")"
     def __repr__(self):
-        return "Node(coord:"+str(self.coordinate)+",class:"+str(self.class_shape)+",text:"+str(self.text)+")"
+        return "Node(class:"+str(self.class_shape)+",text:"+str(self.text)+")"
+        #return "Node(coord:"+str(self.coordinate)+",class:"+str(self.class_shape)+",text:"+str(self.text)+")"
