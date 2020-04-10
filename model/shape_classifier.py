@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import pickle
+import random
 import logging
 from optparse import OptionParser
 
@@ -22,6 +23,8 @@ from frcnn.utilities.config import Config
 from frcnn.utilities.parser import Parser
 from frcnn.utilities.image_tools import ImageTools
 from frcnn.utilities.config import Config
+sys.path.append('..')
+from node import Node
 
 class ShapeClassifier(object):
 	"""Shape Classifier, detects elements of handwritten flowchart using a pre-
@@ -34,13 +37,17 @@ class ShapeClassifier(object):
 		bbox_threshold=0.5,
 		overlap_thresh_1=0.5,
 		overlap_thresh_2=0.3,
-		use_gpu=False
+		use_gpu=False,
+		num_rois=0
 		):
 		super(ShapeClassifier, self).__init__()
 		self.results_path = results_path
 		self.config = None
 		self.__load_config(results_path)
 		self.class_mapping = self.config.class_mapping
+		# Override num_rois if it was specified
+		if(num_rois > 0):
+			self.config.num_rois = num_rois
 		# Thresholds
 		self.bbox_threshold = bbox_threshold
 		self.overlap_thresh_1 = overlap_thresh_1
@@ -56,6 +63,7 @@ class ShapeClassifier(object):
 			self.__setup()
 		# Build Faster R-CNN
 		self.__build_frcnn()
+		print(self.config.num_rois)
 
 	def __setup(self):
 		config_gpu = tf.compat.v1.ConfigProto()
@@ -65,8 +73,9 @@ class ShapeClassifier(object):
 		config_gpu.log_device_placement = True
 		sess = tf.compat.v1.Session(config=config_gpu)
 
-	def predict(self, image, image_name, n, save_image=True):
-		"""Perform object detection, in this case elements of flowchart."""
+	def predict_and_save(self, image, image_name, folder_name):
+		"""Perform object detection, in this case elements of flowchart and
+		draw bounding boxes and image and save the same."""
 
 		st = time.time() # start time
 		# Format input image
@@ -88,7 +97,7 @@ class ShapeClassifier(object):
 		# Apply the spatial pyramid pooling to the proposed regions
 		bboxes, probs = self.__apply_spatial_pyramid_pooling(R, F)
 
-		img, new_boxes, new_probs = self.__generate_final_image(
+		img, _ = self.__generate_final_image(
 			bboxes,
 			probs,
 			image,
@@ -97,18 +106,50 @@ class ShapeClassifier(object):
 		)
 
 		print('Elapsed time = {}'.format(time.time() - st))
-		if(save_image):
-			test_path = self.results_path + "/test3_results/"
-			if(n == 1):
-				test_path = self.results_path + "/test1_results/"
-			elif(n == 2):
-				test_path = self.results_path + "/test2_results/"
+		# Save image
+		path = self.results_path + "/" + folder_name
+		if(os.path.isdir(path) == False):
+			os.mkdir(path)
 
-			if(os.path.isdir(test_path) == False):
-				os.mkdir(test_path)
+		cv2.imwrite(path + "/" + image_name, img)
+		print("Image {}, save in {}".format(image_name, path))
 
-			cv2.imwrite(test_path + image_name, img)
-			print("Image {}, save in {}".format(image_name, test_path))
+	def predict(self, image, display_image):
+		"""Object detection for flowchart and generate nodes for shapes
+		and connectors."""
+
+		# Format input image
+		X, ratio = ImageTools.get_format_img_size(image, self.config)
+		X = np.transpose(X, (0, 2, 3, 1))
+
+		# get the feature maps and output from the RPN
+		[Y1, Y2, F] = self.model_rpn.predict(X)
+		# Instance a ROI Heper
+		roi_helper = ROIHelpers(
+			self.config,
+			overlap_thresh=self.overlap_thresh_1
+		)
+		R = roi_helper.convert_rpn_to_roi(Y1, Y2)
+		# convert from (x1,y1,x2,y2) to (x,y,w,h)
+		R[:, 2] -= R[:, 0]
+		R[:, 3] -= R[:, 1]
+		# Apply the spatial pyramid pooling to the proposed regions
+		bboxes, probs = self.__apply_spatial_pyramid_pooling(R, F)
+
+		img, all_dets = self.__generate_final_image(
+			bboxes,
+			probs,
+			image,
+			roi_helper,
+			ratio
+		)
+		if(display_image):
+			cv2.imshow('test', img)
+			cv2.waitKey(0)
+			cv2.destroyAllWindows()
+
+		return self.generate_nodes(all_dets)
+
 
 	def __load_config(self, results_path):
 		"""Open .pickle file that contains configuration params of F R-CNN."""
@@ -257,12 +298,17 @@ class ShapeClassifier(object):
 		"""Add rectangles of bounding boxes of task detection in
 		original image, add caption and probability of classification.
 		"""
-
+		rectangles_arrows = [
+			"arrow_rectangle_up",
+			"arrow_rectangle_left",
+			"arrow_rectangle_down",
+			"arrow_rectangle_right"
+		]
 		all_dets = []
-		new_boxes = []
-		new_probs = []
 
 		for key in bboxes:
+			if(key in rectangles_arrows):
+				continue
 			bbox = np.array(bboxes[key])
 			# apply non max suppression algorithm
 			roi_helper.set_overlap_thresh(self.overlap_thresh_2)
@@ -290,7 +336,7 @@ class ShapeClassifier(object):
 				)
 
 				textLabel = '{}: {}'.format(key, int(100 * new_probs[jk]))
-				all_dets.append((key, 100 * new_probs[jk]))
+				all_dets.append((key, 100 * new_probs[jk], real_coords))
 
 				(retval, baseLine) = cv2.getTextSize(
 					textLabel,
@@ -326,39 +372,53 @@ class ShapeClassifier(object):
 					1
 				)
 		print(all_dets)
-		return img, new_boxes, new_probs
+		return img, all_dets
 
+	def generate_nodes(self, dets):
+		"""Generate nodes with detections."""
+
+		nodes = []
+		for det in dets:
+			node = Node(coordinate=det[2], class_shape=det[0])
+			nodes.append(node)
+		return nodes
 
 if __name__ == '__main__':
 	folder_numer = input("Type num folder of training results: ")
+	#folder_name = input("Folder name: ")
+
+	overlap_thresh_1 = 0.9
+	overlap_thresh_2 = 0.1
+	bbox_threshold = 0.6
 
 	classifier = ShapeClassifier(
 		"training_results/" + folder_numer,
 		use_gpu=False,
-		overlap_thresh_1=0.7,
-		overlap_thresh_2=0.1,
-		bbox_threshold=0.7
+		overlap_thresh_1=overlap_thresh_1,
+		overlap_thresh_2=overlap_thresh_2,
+		bbox_threshold=bbox_threshold,
+		#num_rois=42
 	)
 
-	print("1) set 1 - original")
-	print("2) set 2 - improved")
-	print("3 miniset - A4 background")
-	n = int(input(">> "))
+	test_path = "/home/david/Escritorio/samples_flowcharts/"
 
-	limite = 16
-	test_path = "/home/david/Escritorio/miniset/"
-	if(n == 1):
-		test_path = "/home/david/Escritorio/set1/"
-		limite = 48
-	elif(n == 2):
-		test_path = "/home/david/Escritorio/set2/"
-		limite = 48
+	img_path = test_path + "hello_world.jpg"
+	img = cv2.imread(img_path)
+	nodes = classifier.predict(img, display_image=False)
+	print(*nodes)
+
+	# for i in range(len(samples)):
+	# 	img_path = test_path + samples[i]
+	# 	img = cv2.imread(img_path)
+	# 	classifier.predict(img, display_image=False)
 
 
-	for i in range(1, limite+1):
-		img_path = test_path + str(i) + ".jpg"
-		img = cv2.imread(img_path)
-		# cv2.imshow('test', img)
-		# cv2.waitKey(0)
-		# cv2.destroyAllWindows()
-		classifier.predict(img, str(i) + ".jpg", n)
+
+
+	# for i in range(1, limite+1):
+	# 	img_path = test_path + str(i) + ".jpg"
+	# 	img = cv2.imread(img_path)
+	# 	# cv2.imshow('test', img)
+	# 	# cv2.waitKey(0)
+	# 	# cv2.destroyAllWindows()
+	# 	classifier.predict_and_save(img, str(i) + ".jpg", folder_name)
