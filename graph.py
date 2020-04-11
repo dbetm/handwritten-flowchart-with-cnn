@@ -51,11 +51,10 @@ class Graph(object):
                             collapse_list[j] == i
                             break;
 
-                            """
+
         #Delate all the nodes that are inside a shape_nodes
         for i in nodes_to_delate:
             text_nodes.remove(i)
-        print("leftovers",text_nodes)
         if(len(text_nodes)>0):
             #Second iteration to collapse nodes to text with arrows
             nodes_to_delate = []
@@ -79,7 +78,7 @@ class Graph(object):
             for i in nodes_to_delate:
                 text_nodes.remove(i)
         #Return the nodes
-        #shape_nodes.extend(text_nodes)"""
+        #shape_nodes.extend(text_nodes)
         return shape_nodes
     def calculate_distance(self,A,B):
         """
@@ -318,6 +317,7 @@ s12 = Node(coordinate = [339,669,1317,1455],class_shape = "start_end")
 
 g = Graph([t1,t2,t3,t4,t5,t6,t7,t8],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12])
 """
+"""
 t1 = Node(coordinate = [504,1344,334,436],text = "ans,n,a=0,b=1,cont=2")
 t2 = Node(coordinate = [1068,1318,96,212],text = "inicio")
 t3 = Node(coordinate = [772,846,642,694],text = "n")
@@ -358,3 +358,4 @@ s21 = Node(coordinate = [1154,1330,1740,2252],class_shape = "arrow_rectangle_up"
 g = Graph([t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,s17,s18,s19,s20,s21])
 print("----------------------------------------------------")
 print(g.generate_graph())
+"""
