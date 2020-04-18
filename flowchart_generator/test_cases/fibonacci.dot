@@ -1,0 +1,25 @@
+digraph {
+	0 [label=inicio shape=ellipse]
+	2 [label="ans,n,a=0,b=1,cont=2" shape=box]
+	0 -> 2
+	4 [label=n shape=parallelogram]
+	2 -> 4
+	4 -> 6
+	6 -> 18 [label=No]
+	{
+		rank=same
+		6 [label="cont < n" shape=diamond]
+		18 [label=ans shape=invhouse]
+	}
+	8 [label="ans = a+b" shape=box]
+	6 -> 8 [label=Yes]
+	10 [label="a = b" shape=box]
+	8 -> 10
+	12 [label="b = ans" shape=box]
+	10 -> 12
+	14 [label="cont = cont+1" shape=box]
+	12 -> 14
+	14 -> 6
+	20 [label=fin shape=ellipse]
+	18 -> 20
+}

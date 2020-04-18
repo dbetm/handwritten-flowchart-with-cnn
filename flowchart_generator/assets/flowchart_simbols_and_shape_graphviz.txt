@@ -2,7 +2,6 @@
 edge normal
 
 + Fechas rectangulares:
-plines ortho
 
 + start_end
 ellipse
