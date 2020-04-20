@@ -253,7 +253,7 @@ class Graph(object):
         """
         self.nodes = self.collapse_nodes()
         #print("-----------------all-----------------")
-        #print(list(enumerate(self.nodes)))
+        print(list(enumerate(self.nodes)))
         #print(len(self.nodes))
         #print("---------------------------------------")
         self.adj_list = {key: [] for key in range(len(self.nodes))}

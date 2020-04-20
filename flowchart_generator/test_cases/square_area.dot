@@ -1,0 +1,13 @@
+digraph {
+	0 [label=inicio shape=ellipse]
+	2 [label="x=0.0, res=0.0" shape=box]
+	0 -> 2
+	4 [label=x shape=parallelogram]
+	2 -> 4
+	6 [label="res=x*x" shape=box]
+	4 -> 6
+	8 [label=res shape=invhouse]
+	6 -> 8
+	10 [label=fin shape=ellipse]
+	8 -> 10
+}

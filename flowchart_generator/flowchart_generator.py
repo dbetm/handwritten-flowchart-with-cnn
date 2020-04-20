@@ -56,7 +56,7 @@ class FlowchartGenerator(object):
                         self.__add_subgraph(dest_cls, dest_key)
             elif(len(node) == 2): #decision
                 arrow_text = self.graph_nodes[node[0]].get_text().lower()
-                if(arrow_text == 'si' or arrow_text == 'yes'):
+                if(arrow_text == 'si' or arrow_text == 'yes' or arrow_text == 'sí'):
                     dest_cls, dest_key = self.__find_dest(self.flow[key][0])
                     if(dest_cls != 'decision'):
                         self.__build_node(
@@ -64,13 +64,13 @@ class FlowchartGenerator(object):
                             self.graph_nodes[dest_key].get_text(),
                             dest_key
                         )
-                        self.__add_edge(str(key), str(dest_key), text="Yes")
+                        self.__add_edge(str(key), str(dest_key), text="Sí")
                     else:
                         self.__add_subgraph(
                             dest_cls,
                             dest_key,
                             last_key=key,
-                            text_edge="Yes"
+                            text_edge="Sí"
                         )
 
         # Render flowchart image
@@ -138,47 +138,32 @@ class FlowchartGenerator(object):
 
 if __name__ == '__main__':
     # Order (x1, x2, y1, y2)
-    # ------ TEST CASE 'Factorial' ------
+    # ------ TEST CASE 'Square area' ------
     # Create text nodes
-    t0 = Node(coordinate=[272,429,25,93], text='inicio')
-    t1 = Node(coordinate=[202,494,202,270], text='n=0, cont=2, res=1')
-    t2 = Node(coordinate=[281,396,348,397], text='n')
-    t3 = Node(coordinate=[264,417,545,602], text='cont <= n')
-    t4 = Node(coordinate=[327,426,675,732], text='Yes')
-    t5 = Node(coordinate=[251,484,795,848], text='res = res * cont')
-    t6 = Node(coordinate=[232,486,925,973], text='cont = cont + 1')
-    t7 = Node(coordinate=[464,539,517,613], text='No')
-    t8 = Node(coordinate=[619,722,557,628], text='res')
-    t9 = Node(coordinate=[767,877,715,787], text='fin')
-    # Create shape nodes
-    s0 = Node(coordinate=[217,492,14,122], class_shape='start_end')
-    s1 = Node(coordinate=[307,372,92,207], class_shape='arrow_line_down')
-    s2 = Node(coordinate=[162,544,175,297], class_shape='process')
-    s3 = Node(coordinate=[309,362,275,343], class_shape='arrow_line_down')
-    s4 = Node(coordinate=[174,526,325,428], class_shape='scan')
-    s5 = Node(coordinate=[299,377,408,528], class_shape='arrow_line_down')
-    s6 = Node(coordinate=[229,449,502,693], class_shape='decision')
-    s7 = Node(coordinate=[292,391,662,790], class_shape='arrow_line_down')
-    s8 = Node(coordinate=[211,514,763,865], class_shape='process')
-    s9 = Node(coordinate=[317,372,842,920], class_shape='arrow_line_down')
-    s10 = Node(coordinate=[206,524,895,1007], class_shape='process')
-    s11 = Node(coordinate=[72,246,940,1010], class_shape='arrow_line_left')
-    s12 = Node(coordinate=[37,132,567,1000], class_shape='arrow_line_up')
-    s13 = Node(coordinate=[69,254,553,617], class_shape='arrow_line_right')
-    s14 = Node(coordinate=[431,594,542,608], class_shape='arrow_line_right')
-    s15 = Node(coordinate=[587,799,517,657], class_shape='print')
-    s16 = Node(
-        coordinate=[624,771,635,773],
-        class_shape='arrow_rectangle_right',
-        #image_path="/home/david/Escritorio/samples_flowcharts/factorial_rect1.jpg"
-        image_path="path/file.jpg"
-    )
-    s17 = Node(coordinate=[749,949,673,792], class_shape='start_end')
+    t0 = Node(coordinate=[689,1012,207,335], text='inicio')
+    t1 = Node(coordinate=[607,1284,658,787], text='x=0.0, res=0.0')
+    t2 = Node(coordinate=[764,881,1076,1169], text='x')
+    t3 = Node(coordinate=[576,1117,1430,1556], text='res=x*x')
+    t4 = Node(coordinate=[756,953,1928,2023], text='res')
+    t5 = Node(coordinate=[681,912,2448,2561], text='fin')
 
-    filename = 'factorial.dot'
+    # Create shape nodes
+    s0 = Node(coordinate=[553,1122,174,397], class_shape='start_end')
+    s1 = Node(coordinate=[776,858,376,630], class_shape='arrow_line_down')
+    s2 = Node(coordinate=[458,1392,592,846], class_shape='process')
+    s3 = Node(coordinate=[787,879,838,1038], class_shape='arrow_line_down')
+    s4 = Node(coordinate=[587,1048,1017,1202], class_shape='scan')
+    s5 = Node(coordinate=[774,879,1187,1356], class_shape='arrow_line_down')
+    s6 = Node(coordinate=[471,1212,1346,1641], class_shape='process')
+    s7 = Node(coordinate=[820,935,1597,1882], class_shape='arrow_line_down')
+    s8 = Node(coordinate=[610,1202,1853,2166], class_shape='print')
+    s9 = Node(coordinate=[792,884,2148,2402], class_shape='arrow_line_down')
+    s10 = Node(coordinate=[517,1128,2379,2661], class_shape='start_end')
+
+    filename = 'square_area.dot'
     graph = Graph(
-        [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9],
-        [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,s17]
+        [t0, t1, t2, t3, t4, t5],
+        [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10]
     )
 
     flow = graph.generate_graph()

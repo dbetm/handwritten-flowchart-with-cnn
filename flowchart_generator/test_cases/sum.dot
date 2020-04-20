@@ -1,0 +1,19 @@
+digraph {
+	0 [label=inicio shape=ellipse]
+	2 [label="a=0, b=0, res=0" shape=box]
+	0 -> 2
+	4 [label="\"Dame a: \"" shape=invhouse]
+	2 -> 4
+	6 [label=a shape=parallelogram]
+	4 -> 6
+	8 [label="\"Dame b: \"" shape=invhouse]
+	6 -> 8
+	10 [label=b shape=parallelogram]
+	8 -> 10
+	12 [label="res = a+b" shape=box]
+	10 -> 12
+	14 [label="\"Resultado es: \" res" shape=invhouse]
+	12 -> 14
+	16 [label=fin shape=ellipse]
+	14 -> 16
+}
