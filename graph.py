@@ -1,18 +1,24 @@
 import math
-from node import Node
+
 import cv2
+
+from node import Node
+
+
 class Graph(object):
+
     def __init__(self,text_nodes,shape_nodes):
         self.text_nodes = text_nodes
         self.shape_nodes = shape_nodes
         self.nodes = None
         self.adj_list = None
         self.visited_list = None
+
     def is_collapse(self,A,B):
+        """ This function return if exist a interseccion in two nodes.
+        """
+
         #[xmin,xmax,ymin,ymax]
-        """
-        This function return if exist a interseccion in two nodes
-        """
         coordinateA = A.get_coordinate()
         coordinateB = B.get_coordinate()
 
@@ -27,9 +33,9 @@ class Graph(object):
         Check the text nodes that are inside of a shape node
         If a text node are inside or near of a shape node the value of the text
         set de value in shape node
-        *check if exist more than one overlaping text nodes if is the case calculate the distance
-        and the less distance it will be the true text in te shape node
+        *check if exist more than one overlaping text nodes if is the case calculate the distance and the less distance it will be the true text in te shape node.
         """
+
         text_nodes = self.text_nodes
         shape_nodes = self.shape_nodes
         nodes_to_delate = []
@@ -80,13 +86,14 @@ class Graph(object):
         #Return the nodes
         #shape_nodes.extend(text_nodes)
         return shape_nodes
+
     def calculate_distance(self,A,B):
+        """Calculate distance between two rectangles
+        1)First propuest is:
+            - Calculate the center point of the two nodes.
+            - Calculate the distance between the two center points.
         """
-        calculate distance between two rectangles
-        1)Fist propuest is:
-            -Calculate the center point of the two nodes
-            -Calculate the distance between the two center points
-        """
+
         if(type(A) is list):
             cx1 = A[0]
             cy1 = A[1]
@@ -99,6 +106,7 @@ class Graph(object):
         cy2 = int((coordinateB[2] + coordinateB[3]) / 2)
 
         return math.sqrt(math.pow(cx1 - cx2,2) + math.pow(cy1-cy2,2))
+
     def rigth_or_left(self,img_path):
         img = cv2.imread(img_path,0)
         #cv2.imshow("imagen",img)
@@ -127,10 +135,13 @@ class Graph(object):
             if(node.get_class() == "start_end" and node.get_text() == "inicio"):
                 return self.nodes.index(node)
         return -1
+
     def is_any_arrow(self,node):
         return node.get_class().split('_')[0] == "arrow"
+
     def is_graph_visited(self):
         return (sum(x == 1 for x in self.visited_list) == len(self.visited_list))
+
     def can_visit(self,previous_node,node_index):
         if(self.nodes[node_index].get_class() == "decision"):
             return self.visited_list[node_index] <= 1 and not(previous_node in self.adj_list[node_index])
@@ -138,6 +149,7 @@ class Graph(object):
             return not(previous_node in self.adj_list[node_index])
         else:
             return self.visited_list[node_index] == 0 and not(previous_node in self.adj_list[node_index])
+
     def find_next(self,node_index):
         if(not(self.is_graph_visited())):
             #calculate the distance with another nodes
@@ -244,13 +256,12 @@ class Graph(object):
                     else:
                         return str(node_index)+"NV"
 
-
     def generate_graph(self):
+        """ Generate the adyacency list of the nodes starting of the relationship of
+        the nodes. Decision shape is a special case, because can have two connectors
+        *Check the cases arrow-rectangle/arrow line.
         """
-        Generate the adyacency list of the nodes starting of the relationship of the nodes
-        Desicion shape is a special case, because can have two connectors
-        *Check the cases arrow-rectangle/arrow line
-        """
+
         self.nodes = self.collapse_nodes()
         #print("-----------------all-----------------")
         print(list(enumerate(self.nodes)))
@@ -265,8 +276,10 @@ class Graph(object):
             print(self.adj_list)
             return "Not valid"
         return self.adj_list
+
     def get_adyacency_list(self):
         return self.adj_list
+
     def get_nodes(self):
         return self.nodes
 
