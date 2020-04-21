@@ -100,6 +100,9 @@ class Parser(object):
 	def __generate_annotate(self):
 		"""Generate annotation file from dataset."""
 
+		if not(os.path.isdir(self.dataset_path)):
+			print("Error: Not valid dataset path!")
+			exit()
 		print("Generating annots file...")
 
 		train_path = self.dataset_path + "/train"

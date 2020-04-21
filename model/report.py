@@ -63,6 +63,9 @@ class Report(object):
 		sess = tf.compat.v1.Session(config=config_gpu)
 
 	def __load_config(self):
+		if not(os.path.isdir(self.results_path)):
+			print("Error: Not valid results path!")
+			exit()
 		config_path = self.results_path + "config.pickle"
 		with open(config_path, 'rb') as f_in:
 			self.config = pickle.load(f_in)
