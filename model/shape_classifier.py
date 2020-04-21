@@ -4,6 +4,7 @@ from __future__ import division
 import os
 import sys
 import time
+import copy
 import pickle
 import random
 import logging
@@ -63,7 +64,8 @@ class ShapeClassifier(object):
 			self.__setup()
 		# Build Faster R-CNN
 		self.__build_frcnn()
-		print(self.config.num_rois)
+		# saving tmp rectangles, path to save
+		self.RECTANGLES_PATH = "../Images/tmp/"
 
 	def __setup(self):
 		config_gpu = tf.compat.v1.ConfigProto()
@@ -147,7 +149,7 @@ class ShapeClassifier(object):
 			cv2.imshow('test', img)
 			cv2.waitKey(0)
 			cv2.destroyAllWindows()
-
+		
 		return self.generate_nodes(all_dets)
 
 
@@ -298,17 +300,18 @@ class ShapeClassifier(object):
 		"""Add rectangles of bounding boxes of task detection in
 		original image, add caption and probability of classification.
 		"""
-		rectangles_arrows = [
-			"arrow_rectangle_up",
-			"arrow_rectangle_left",
-			"arrow_rectangle_down",
-			"arrow_rectangle_right"
-		]
+		# rectangles_arrows = [
+		# 	"arrow_rectangle_up",
+		# 	"arrow_rectangle_left",
+		# 	"arrow_rectangle_down",
+		# 	"arrow_rectangle_right"
+		# ]
+		original_img = copy.copy(img)
 		all_dets = []
-
+		i = -1
 		for key in bboxes:
-			if(key in rectangles_arrows):
-				continue
+			# if(key in rectangles_arrows):
+			# 	continue
 			bbox = np.array(bboxes[key])
 			# apply non max suppression algorithm
 			roi_helper.set_overlap_thresh(self.overlap_thresh_2)
@@ -318,10 +321,18 @@ class ShapeClassifier(object):
 			)
 
 			for jk in range(new_boxes.shape[0]):
+				i += 1
 				(x1, y1, x2, y2) = new_boxes[jk,:]
 
 				real_coords = ImageTools.get_real_coordinates(ratio, x1, y1, x2, y2)
 				real_x1, real_y1, real_x2, real_y2 = real_coords
+				# Save arrow rectangles
+				if(self.__is_rectangle_arrow(key)):
+					self.__save_rectangle_arrow(
+						(real_x1, real_y1, real_x2, real_y2),
+						original_img,
+						i
+					)
 				# Rectangle for shape or connector
 				cv2.rectangle(
 					img,
@@ -371,38 +382,64 @@ class ShapeClassifier(object):
 					(0, 0, 0),
 					1
 				)
-		print(all_dets)
+		#print(all_dets)
 		return img, all_dets
 
 	def generate_nodes(self, dets):
 		"""Generate nodes with detections."""
 
 		nodes = []
+		#i = 1
 		for det in dets:
+			# if(self.__is_rectangle_arrow(det[0])):
+			# 	self.__save_rectangle_arrow(det, image, i)
 			node = Node(coordinate=det[2], class_shape=det[0])
 			nodes.append(node)
+			#i += 1
 		return nodes
 
+	def __is_rectangle_arrow(self, class_shape):
+		ans = True
+		str = class_shape.split('_')
+		if(len(str) < 3):
+			ans = False
+		elif not('rectangle' in str):
+			ans = False
+
+		return ans
+
+	def __save_rectangle_arrow(self, coords, image, i):
+		"""Assign a name according to the detection index."""
+		# coordinates (x1, y1, x2, y2)
+		x = coords[0]
+		y = coords[1]
+		w = coords[2] - coords[0]
+		h = coords[3] - coords[1]
+		crop_img = image[y:y+h, x:x+w]
+		cv2.imwrite(self.RECTANGLES_PATH + str(i) + ".jpg", crop_img)
+
+
 if __name__ == '__main__':
-	folder_numer = input("Type num folder of training results: ")
+	#folder_numer = input("Type num folder of training results: ")
 	#folder_name = input("Folder name: ")
+	folder_number = "8"
 
 	overlap_thresh_1 = 0.9
 	overlap_thresh_2 = 0.1
 	bbox_threshold = 0.6
 
 	classifier = ShapeClassifier(
-		"training_results/" + folder_numer,
+		"training_results/" + folder_number,
 		use_gpu=False,
 		overlap_thresh_1=overlap_thresh_1,
 		overlap_thresh_2=overlap_thresh_2,
 		bbox_threshold=bbox_threshold,
-		#num_rois=42
+		num_rois=32
 	)
 
-	test_path = "/home/david/Escritorio/samples_flowcharts/"
+	test_path = "/home/david/Escritorio/"
 
-	img_path = test_path + "hello_world.jpg"
+	img_path = test_path + "rect.jpg"
 	img = cv2.imread(img_path)
 	nodes = classifier.predict(img, display_image=False)
 	print(*nodes)
