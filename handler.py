@@ -18,6 +18,9 @@ class HandlerGUI(object):
         self.master.resizable(False,False)
         self.master.geometry("600x600")
         self.master.config(bg="#857074")
+        # Predict
+        self.selected_image = ""
+        self.models_path = "model/training_results/"
         #Header
         self.header = tk.Frame(self.master)
         self.header.config(width="1000",height="100",bg="#943340")
@@ -35,7 +38,7 @@ class HandlerGUI(object):
 
     def start_train_action(self,args):
         print(args)
-        if(self.__validate(args)):
+        if(self.__validate_train_inputs(args)):
             print("Train")
 
     def train_window(self):
@@ -115,7 +118,17 @@ class HandlerGUI(object):
         )
         label.set(aux)
 
-    def __validate(self, args):
+    def __select_image(self):
+        self.selected_image = filedialog.askopenfilename(
+            title="Select image",
+            filetypes=(
+                ("all files","*.*"),
+                ("jpeg files",("*.jpg, *.jpeg")),
+                ("png files","*.png")
+            )
+        )
+
+    def __validate_train_inputs(self, args):
         error_msg = ""
 
         dataset_path = args[0]
@@ -164,6 +177,74 @@ class HandlerGUI(object):
 
         return ans
 
+    def __validate_predict_inputs(self, args):
+        error_msg = ""
+        folder_training_results = args[0]
+        image_path = args[1]
+        # args[2] => use_gpu, domain limited, not necessary validation
+        num_rois = args[3]
+        if(num_rois == "Type number of RoIs"):
+            num_rois = "32"
+        vali = 4 * [True]
+
+        model_path = self.models_path + folder_training_results
+        # Validation
+        # Path of model
+        if not(os.path.isdir(model_path)):
+            vali[0] = False
+            error_msg += "Training results folder not valid"
+        else:
+            file = self.__search_model(model_path)
+            if(file == "-1"):
+                vali[0] = False
+                error_msg += "Training results folder not contains any model"
+        # Image path
+        if(os.path.isfile(image_path)):
+            if('.' in image_path):
+                format = image_path.split(".")
+                format = format[len(format)-1]
+                if(format != 'png' and format != 'jpg' and format != 'jpeg'):
+                    vali[1] = False
+                    error_msg += "\nFormat image not valid"
+            else:
+                vali[1] = False
+                error_msg += "\nFormat image not valid"
+        else:
+            vali[1] = False
+            error_msg += "\nImage not found"
+        # Number of Regions of Interest (RoIs)
+        if(num_rois != ""):
+            if(self.__represents_type(num_rois, "int")):
+                if(int(num_rois) <= 3):
+                    vali[1] = False
+                    error_msg += "\nNum rois not valid"
+            else:
+                vali[1] = False
+                error_msg += "\nNum rois must be a integer"
+
+        ans = vali[0] and vali[1] and vali[3]
+        # Display error message box
+        if not(ans):
+            messagebox.showerror("Error(s)", error_msg)
+
+        return ans
+
+    def __search_model(self, model_path):
+        files = [f for f in os.listdir(model_path) if os.path.isfile(os.path.join(model_path, f))]
+        validated_file = ""
+        for file in files:
+            if('.' in file):
+                format = file.split(".")
+                format = format[len(format)-1]
+                if(format == 'hdf5' or format == 'h5'):
+                    validated_file = file
+                    break
+        if(validated_file == ""):
+            return "-1"
+        else:
+            # Return the first model founded
+            return validated_file
+
     def __represents_type(self, var, type):
         if(type == "int"):
             try:
@@ -187,27 +268,72 @@ class HandlerGUI(object):
             return False
 
     def recognize_flowchart_window(self):
-        models_path = "Images"
+        """ Recognize flowchart window.
         """
-        Recognize flowchart window
-        """
+
         window = tk.Toplevel(self.master)
         window.pack_propagate(False)
         window.title("Recognize flowchart")
-        window.config(width="400", height="350",bg="#943340")
-        title_text = tk.Label(window,text="Recognize flowchart",height=3, width=20,bg="#943340",font=("Arial",25))
+        window.config(width="400", height="525",bg="#943340")
+        title_text = tk.Label(window, text="Recognize flowchart",height=3, width=20,bg="#943340",font=("Arial",25))
         title_text.pack()
-        #Diferent models to select
-        model_list = os.listdir(models_path)
-        combobox_model = ttk.Combobox(window,values = model_list,width = 22,font=("Arial",15))
-        combobox_model.pack(pady = 10)
-        combobox_model.current(0)
-        #boton
-        button_image = tk.Button(window,text = "select image",width = 20,height=2,font=("Arial",15))
-        button_image.pack(pady = 10)
-        #button to start to predict
-        button_predict = tk.Button(window,text = "predict",width = 20,height=2,font=("Arial",15),command = self.show_results)
-        button_predict.pack(pady = 10)
+
+        # Diferent models to select
+        model_folder_list = os.listdir(self.models_path)
+        model_folder_list.append("Select a folder of training results")
+        model_folder_list.reverse()
+        combobox_model_folder = ttk.Combobox(window,values = model_folder_list, width =27,font=("Arial",13))
+        combobox_model_folder.pack(pady=10)
+        combobox_model_folder.current(0)
+
+        # Button for select image
+        button_image = tk.Button(window,text="Select image",width=18,height=2,font=("Arial",12), command=self.__select_image)
+        button_image.pack(pady=10)
+
+        # Use GPU
+        use_gpu_val = IntVar()
+        use_gpu_check = Checkbutton(window, text="Use GPU", variable=use_gpu_val,width=20,height=2)
+        use_gpu_check.pack(pady=10)
+
+        # Number of RoIs
+        num_rois_lbl = tk.Label(window,text="Optional, default: 32",height=2, width=20,bg="#943340",font=("Arial",10))
+        num_rois_lbl.pack()
+        num_rois_input = tk.Entry(window,font=("Arial",12), width=20)
+        num_rois_input.insert(0, 'Type number of RoIs')
+        num_rois_input.bind('<FocusIn>', lambda args: num_rois_input.delete('0', 'end'))
+        num_rois_input.bind('<FocusOut>', lambda x: num_rois_input.insert('0', 'Type number of RoIs') if not num_rois_input.get() else 0)
+        num_rois_input.pack(pady=10)
+
+        # Button for start to predict
+        button_predict = tk.Button(
+            window,
+            text="Predict",
+            width=20,
+            height=2,
+            font=("Arial",15),
+            command=lambda :
+                self.predict(
+                    [
+                        combobox_model_folder.get(),
+                        self.selected_image,
+                        use_gpu_val.get(),
+                        num_rois_input.get()
+                    ]
+                )
+        )
+        button_predict.pack(pady=10)
+
+    def predict(self, args):
+        if(self.__validate_predict_inputs(args)):
+            model = self.__search_model(self.models_path + args[0])
+            model = args[0] + "/" + model
+            image_path = args[1]
+            use_gpu = True if args[2] else False
+            num_rois = int(args[3])
+
+            print(model, image_path, use_gpu, num_rois)
+
+            self.show_results()
 
     def show_results(self):
         window = tk.Toplevel(self.master)

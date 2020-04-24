@@ -5,13 +5,6 @@ Shape model module contains a class to manage the model for shapes and connector
 recognition, allows train an architecture that use CNNs and measure the same.
 """
 
-__autor__ = "David"
-__credits__ = ["David Betancourt Montellano", "Onder Francisco Campos García"]
-__license__ = "MIT"
-__version__ = "1.0"
-__email__ = "davbetm@gmail.com"
-__status__ = "Development"
-
 import os
 
 from train import Trainer
