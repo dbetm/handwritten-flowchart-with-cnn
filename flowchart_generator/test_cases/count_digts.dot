@@ -1,0 +1,21 @@
+digraph {
+	0 [label=inicio shape=ellipse]
+	2 [label="n=0, cont=0" shape=box]
+	0 -> 2
+	4 [label=n shape=parallelogram]
+	2 -> 4
+	4 -> 6
+	6 -> 15 [label=No]
+	{
+		rank=same
+		6 [label="n > 0" shape=diamond]
+		15 [label=cont shape=invhouse]
+	}
+	8 [label="n = n / 10" shape=box]
+	6 -> 8 [label="Sí"]
+	10 [label="cont = cont + 1" shape=box]
+	8 -> 10
+	10 -> 6
+	17 [label=fin shape=ellipse]
+	15 -> 17
+}

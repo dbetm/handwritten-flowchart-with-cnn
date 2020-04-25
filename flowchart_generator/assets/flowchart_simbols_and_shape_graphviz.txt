@@ -1,0 +1,21 @@
++ Flechas rectas:
+edge normal
+
++ Fechas rectangulares:
+
++ start_end
+ellipse
+
++ print
+invhouse
+
++ scan
+parallelogram
+
++ process
+box
+
++ decision (siempre saca dos flechas al mismo nivel)
+diamond
+
+
