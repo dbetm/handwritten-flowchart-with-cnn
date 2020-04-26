@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import json
 
 import tkinter as tk
 from tkinter import ttk
@@ -10,7 +11,7 @@ from PIL import ImageTk, Image
 
 class HandlerGUI(object):
 
-    def __init__(self, master):
+    def __init__(self, master, env_name):
         self.master = master
         ##Init of the master view
         self.master.title("Handwritten flowchart with cnn")
@@ -21,6 +22,8 @@ class HandlerGUI(object):
         # Predict
         self.selected_image = ""
         self.models_path = "model/training_results/"
+        #training
+        self.env_name = env_name
         #Header
         self.header = tk.Frame(self.master)
         self.header.config(width="1000",height="100",bg="#943340")
@@ -39,7 +42,34 @@ class HandlerGUI(object):
     def start_train_action(self,args):
         print(args)
         if(self.__validate_train_inputs(args)):
-            print("Train")
+            dataset_path = args[0]
+            rois = None if args[1] == '' else int(args[1])
+            weights_input = None if args[2] == '' else args[2]
+            epochs = None if args[3] == '' else int(args[3])
+            lr = None if args[4] == '' else float(args[4])
+            use_gpu = True if args[5] == 1 else False
+            print(dataset_path, rois, weights_input, epochs, lr, use_gpu)
+
+            cmd = 'source ~/anaconda3/etc/profile.d/conda.sh && conda activate ' + self.env_name
+            cmd += ' && cd model/ && python3 shape_model.py; exec bash'
+
+            args = {
+                "dataset": dataset_path,
+                "rois": rois,
+                "input_weight_path": weights_input,
+                "epochs": epochs,
+                "learning_rate": lr,
+                "gpu": use_gpu
+            }
+            with open('model/args.json', 'w') as json_file:
+                json.dump(args, json_file)
+                json_file.close()
+
+            cmd_exec = "gnome-terminal -e 'bash -c \"" + cmd + "\"'"
+            # cmd_exec = "gnome-terminal -e 'bash -c \"conda init bash && python3 test.py; exec bash\"'"
+            print(cmd_exec)
+            os.system(cmd_exec)
+
 
     def train_window(self):
         """ Train model window.
@@ -363,4 +393,5 @@ class HandlerGUI(object):
         panel.pack(side = tk.LEFT)
 
 root = tk.Tk()
-my_gui = HandlerGUI(root)
+# hf is the name of the Conda environment
+my_gui = HandlerGUI(root, "hf")
