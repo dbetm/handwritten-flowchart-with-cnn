@@ -1,9 +1,10 @@
-from EMNIST_ HASY_model import model.Model as EH_model
 import keras_ocr
 import string
-sys.path.append('..')
+import os
+import sys
+from EHmodel.model import Model
 from node import Node
-class TexClassifier(object):
+class TextClassifier(object):
     def __init__(self):
         """
         All the values that need initialize are added

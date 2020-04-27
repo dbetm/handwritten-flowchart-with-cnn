@@ -30,7 +30,7 @@ class Preproc(object):
                     bg[y + dif,x] = image[y,x]
         else:
             bg = image
-        img = cv2.resize(image,(24,24), interpolation = cv2.INTER_LINEAR)
+        img = cv2.resize(bg,(24,24), interpolation = cv2.INTER_AREA)
         bg = np.zeros((28, 28))
         for y in range(24):
             for x in range(24):
@@ -56,7 +56,7 @@ class Preproc(object):
                     bg[y + dif,x] = image[y,x]
         else:
             bg = image
-        return cv2.resize(bg,(28,28),interpolation = cv2.INTER_LINEAR)
+        return cv2.resize(bg,(28,28),interpolation = cv2.INTER_AREA)
 
     def resize_28_28(self,image):
         h,w = image.shape
@@ -70,7 +70,7 @@ class Preproc(object):
                         if(image[y,x] == 255):
                             xmin = min(x,xmin)
                             xmax = max(x,xmax)
-                image = cv2.resize(image,(w,28), interpolation = cv2.INTER_LINEAR)
+                image = cv2.resize(image,(w,28), interpolation = cv2.INTER_AREA)
                 bg = np.zeros((28, 28))
                 res = 28 - (xmax - xmin)
                 res_half_1 = floor(res/2)
@@ -80,7 +80,12 @@ class Preproc(object):
                         bg[y,x + res_half_1] = image[y,x]
                 image = bg
         else:
-            image = cv2.resize(image,(28,28), interpolation = cv2.INTER_LINEAR)
+            image = cv2.resize(image,(28,28), interpolation = cv2.INTER_AREA)
+        return image
+    def preproc(self,image):
+        blur = cv2.GaussianBlur(image,(5,5),0)
+        ret3,image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        image = (255 - image)
         return image
 """pp = Preproc()
 cv2.imshow("imagen",pp.resize_to_train(cv2.imread("data/printable/73/a01-014-02-07.png",0)))

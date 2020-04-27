@@ -6,6 +6,7 @@ recognition, allows train an architecture that use CNNs and measure the same.
 """
 
 import os
+import json
 
 from train import Trainer
 from report import Report
@@ -31,7 +32,12 @@ class ShapeModel(object):
 		folder = os.listdir(ans)
 		num_results = len(folder)
 
-		return ans + "/" + str(num_results)
+		name = ans + "/" + str(num_results)
+		while(os.path.isdir(name)):
+			num_results += 1
+			name = ans + "/" + str(num_results)
+
+		return name
 
 	def train(
 			self,
@@ -72,6 +78,7 @@ class ShapeModel(object):
 			learning_rate=learning_rate,
 		)
 		trainer.save_config(config_output_filename)
+		exit() # trip wire
 		trainer.train()
 
 	def generate_classification_report(
@@ -93,10 +100,39 @@ class ShapeModel(object):
 		report.generate()
 
 
+def get_options():
+	"""Util function to load options for training process."""
+	try:
+		with open('args.json', 'r') as f:
+			options_dict = json.load(f)
+	except Exception as e:
+		print("Options file (JSON) don't found!")
+		exit()
+
+	return options_dict
+
+
 if __name__ == '__main__':
+	"""Please, if you want to generate the report for a specified model,
+	uncomment the last block of code and comment first lines.
+	"""
+	options_dict = get_options()
+	print(options_dict)
+
+	# Set default values
+	if(options_dict['rois'] == None):
+		options_dict['rois'] = 32
+	if(options_dict['input_weight_path'] == None):
+		options_dict['input_weight_path'] = "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
+	if(options_dict['epochs'] == None):
+		options_dict['epochs'] = 5
+	if(options_dict['learning_rate'] == None):
+		options_dict['learning_rate'] = 1e-5
+
 	shape_model = ShapeModel(
-		dataset_path="/home/david/Escritorio/flowchart-3b(splitter)",
-		num_rois=32,
+		dataset_path=options_dict['dataset'],
+		num_rois=options_dict['rois'],
+		weights_input_path=options_dict['input_weight_path']
 		# weights_input_path="training_results/1/flowchart_3b_model.hdf5"
 		# weights_input_path="vgg16_weights_tf_dim_ordering_tf_kernels.h5"
 	)
@@ -104,9 +140,9 @@ if __name__ == '__main__':
 	shape_model.train(
 	    horizontal_flips=False,
 	    vertical_flips=False,
-	    num_epochs=5,
-		learning_rate=0.1,
-		use_gpu=True
+	    num_epochs=options_dict['epochs'],
+		learning_rate=options_dict['learning_rate'],
+		use_gpu=options_dict['gpu']
 	)
 
 	# shape_model.generate_classification_report(

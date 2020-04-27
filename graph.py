@@ -1,9 +1,6 @@
 import math
-
 import cv2
-
 from node import Node
-
 
 class Graph(object):
 
@@ -376,7 +373,7 @@ g = Graph([t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s
 print("----------------------------------------------------")
 print(g.generate_graph())
 """
-# Order (x1, x2, y1, y2)
+"""# Order (x1, x2, y1, y2)
     # ------ TEST CASE 'Fibonacci' ------
     # Create text nodes
 t0 = Node(coordinate=[934,1219,136,263], text='inicio')
@@ -431,4 +428,4 @@ graph = Graph(
     [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,s17,s18,s19,s20]
 )
 flow = graph.generate_graph()
-print(flow)
+print(flow)"""

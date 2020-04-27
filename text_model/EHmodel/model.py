@@ -1,6 +1,5 @@
 import os
 import keras
-from dataGenerator import DataGenerator
 from keras.models import Sequential
 #Dense Means fully connected layers , Dropout is a technique to improve convergence ,
 # Flatten is to reshape the matrix for giving to different layers
@@ -15,12 +14,13 @@ from tensorflow.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.constraints import MaxNorm
 import cv2
+from dataGenerator import DataGenerator
 from data_preparation import Preproc
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
 session = InteractiveSession(config=config)
 tf.config.experimental.list_physical_devices(device_type=None)
-class Model:
+class Model(object):
     def __init__(self):
         self.num_classes = 62+23
         self.input_shape = (28,28,1)
@@ -29,7 +29,7 @@ class Model:
         self.model = None
         self.output_path = "output"
         self.target_path = self.output_path + "/checkpoint_weights.hdf5"
-        f = open("data/mapping.txt", "r")
+        f = open("text_model/EHmodel/data/mapping.txt", "r")
         lines = []
         left,rigth = [],[]
         for i in f:
@@ -165,7 +165,7 @@ class Model:
         self.model.compile(loss=keras.losses.categorical_crossentropy,optimizer=keras.optimizers.Adadelta(),metrics=['accuracy'])
 
         #------------------------( Get the data )------------------------------------
-        dataGenerator = DataGenerator("data/mnist/gzip")
+        dataGenerator = DataGenerator("text_model/EHmodel/data/mnist/gzip")
         x_train,y_train,x_test, y_test = dataGenerator.get_data()
         print("-----------------------------------------------")
         print("shape",x_train.shape)
@@ -179,8 +179,8 @@ class Model:
         score = self.model.evaluate(x_test, y_test, verbose=0)
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
-model = Model()
-model.train()
+#model = Model()
+#model.train()
 #model.model_predict(cv2.imread("pruebas/1.jpg",0))
 """img = cv2.imread("pruebas/hola.jpg",0)
 blur = cv2.GaussianBlur(img,(5,5),0)
