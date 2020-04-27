@@ -2,34 +2,9 @@ from graph import Graph
 from node import Node
 import os
 class CodeGenerator(object):
-    def __init__(self,image_path = None,result_path = None):
-        self.result_path = result_path
-        t1 = Node(coordinate = [384,600,123,189],text = "inicio")
-        t2 = Node(coordinate = [375,597,378,438],text = "x=6")
-        t3 = Node(coordinate = [429,570,678,750],text = "x>5")
-        t4 = Node(coordinate = [402,579,960,1008],text = '"falso"')
-        t5 = Node(coordinate = [783,930,948,1008],text = '"verdad"')
-        t6 = Node(coordinate = [426,546,1341,1410],text = "fin")
-        t7 = Node(coordinate = [705,825,606,666],text = "si")
-        t8 = Node(coordinate = [363,423,858,906],text = "no")
-
-        s1 = Node(coordinate = [318,675,81,231],class_shape = "start_end")
-        s2 = Node(coordinate = [456,513,237,354],class_shape = "arrow_line_down")
-        s3 = Node(coordinate = [306,684,354,489],class_shape = "process")
-        s4 = Node(coordinate = [462,522,483,594],class_shape = "arrow_line_down")
-        s5 = Node(coordinate = [345,615,588,858],class_shape = "decision")
-        s6 = Node(coordinate = [612,921,702,939],class_shape = "arrow_rectangle_down",image_path="graph_images/rect_down.png")
-        s7 = Node(coordinate = [438,504,849,954],class_shape = "arrow_line_down")
-        s8 = Node(coordinate = [372,645,948,1125],class_shape = "print")
-        s9 = Node(coordinate = [741,1059,936,1095],class_shape = "print")
-        s10 = Node(coordinate = [420,471,1119,1320],class_shape = "arrow_line_down")
-        s11 = Node(coordinate = [669,849,1092,1410],class_shape = "arrow_rectangle_right",image_path="graph_images/rect_right.png")
-        s12 = Node(coordinate = [339,669,1317,1455],class_shape = "start_end")
-
-
-        self.graph = Graph([t1,t2,t3,t4,t5,t6,t7,t8],[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12])
-
-        self.adj_list = self.graph.generate_graph()
+    def __init__(self,graph,file_path):
+        self.FILE_PATH = "results/"+file_path+"code.c"
+        self.graph = graph
         print("adjacency_list = ",self.adj_list)
         self.nodes = self.graph.get_nodes()
         self.pos_x = 0
@@ -42,7 +17,6 @@ class CodeGenerator(object):
         return node.get_class().split('_')[0] == "arrow"
     def generate_tabs(self,pos_x):
         return "    "*pos_x
-
     def get_type(self,sentence):
         tam_data = {"char":1,"int":2,"double":8}
         separated = []
@@ -154,7 +128,7 @@ class CodeGenerator(object):
             elif(self.nodes[index].get_class() == "start_end" and self.nodes[index].get_text()):
                 self.lines_to_write.append(self.generate_tabs(self.pos_x)+"return 0;\n");
                 self.lines_to_write.append("}\n");
-                f = open(self.result_path, "a")
+                f = open(self.FILE_PATH, "a")
                 f.writelines(self.lines_to_write)
                 f.close()
             elif(self.nodes[index].get_class() == "decision"):
@@ -232,5 +206,3 @@ class CodeGenerator(object):
                         if(self.nodes[i].get_text() == "no"):
                             start = self.adj_list[index].index(i)
                     self.generate(self.adj_list[index][start],-1)
-cg = CodeGenerator(result_path = "result1.c")
-cg.generate(0,-1)

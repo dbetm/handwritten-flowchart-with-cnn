@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 import os
-
 import tkinter as tk
 from tkinter import ttk
 from tkinter import Checkbutton, IntVar
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import ImageTk, Image
-
+from graph import Graph
+from codeGenerator import CodeGenerator
+sys.path.append('text_model')
+from  text_classifier import TexClassifier
+sys.path.append('../model')
+from shape_classifier import ShapeClassifier
 class HandlerGUI(object):
 
     def __init__(self, master):
+        self.RESULTS_PATH = "results/"
         self.master = master
         ##Init of the master view
         self.master.title("Handwritten flowchart with cnn")
@@ -266,6 +271,9 @@ class HandlerGUI(object):
                 return False
         else:
             return False
+    def __get_results_path(self):
+        results_dir = os.listdir(self.RESULTS_PATH)
+        return str(len(results_dir) + 1) + "/"
 
     def recognize_flowchart_window(self):
         """ Recognize flowchart window.
@@ -332,10 +340,26 @@ class HandlerGUI(object):
             num_rois = int(args[3])
 
             print(model, image_path, use_gpu, num_rois)
+            #Get the image
+            image = cv2.imread(image_path,0)
+            #Text segmentation(areas)
+                #Text predict(text value)
+                #[Node..........]
+            tc = TexClassifier()
+            text_nodes = tc.recognize(image_path)
+            #shape model predict([Node......])
+            sc = ShapeClassifier(results_path = model,use_gpu=use_gpu,num_rois=num_rois)
+            shape_nodes = sc.predict(image)
+            #build the graph
+            graph = Graph(text_nodes,shape_nodes)
+            graph.generate_graph()
+            #call function to traslate to code and flowchart
+            results_path = self.__get_results_path()
+            cg = CodeGenerator(graph,results_path)
+            cg.generate(0,-1)
+            self.show_results(results_path)
 
-            self.show_results()
-
-    def show_results(self):
+    def show_results(self,results_path):
         window = tk.Toplevel(self.master)
         window.pack_propagate(False)
         window.config(width="800", height="620",bg="#943340")
@@ -346,7 +370,7 @@ class HandlerGUI(object):
         #code visualtiation
         code_panel = tk.Text(window,width=30,height=21,font=("Arial",15))
         code_panel.pack(side = tk.LEFT,padx = 30)
-        code_text = open("results/result1.c",'r')
+        code_text = open("results"+results_path+"code.c",'r')
         count = 0
         while True:
             count += 1
@@ -355,7 +379,7 @@ class HandlerGUI(object):
                 break
             code_panel.insert(tk.INSERT,line)
         #image
-        img = Image.open("results/result1.jpg")
+        img = Image.open("results/"+results_path+"image.png")
         img.thumbnail((500,500), Image.ANTIALIAS)
         imgL = ImageTk.PhotoImage(img)
         panel = tk.Label(window,image = imgL)
