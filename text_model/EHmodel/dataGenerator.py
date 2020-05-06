@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import os
 from random import randint
-from data_preparation import Preproc
+from . dataPreparation import Preproc
 class DataGenerator(object):
     def __init__(self,eminist_path):
         self.EMNIST_PATH = eminist_path

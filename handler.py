@@ -8,15 +8,12 @@ from tkinter import Checkbutton, IntVar
 from tkinter import filedialog
 from tkinter import messagebox
 from PIL import ImageTk, Image
+import cv2
 from graph import Graph
 from codeGenerator import CodeGenerator
-
-
-#from text_model.text_classifier import Text_classifier
-
-
-
+from text_model.text_classifier import TextClassifier
 from model.shape_classifier import ShapeClassifier
+from flowchart_generator.flowchart_generator import FlowchartGenerator
 class HandlerGUI(object):
     def __init__(self, master, env_name):
         self.RESULTS_PATH = "results/"
@@ -366,30 +363,41 @@ class HandlerGUI(object):
 
     def predict(self, args):
         if(self.__validate_predict_inputs(args)):
-            model = self.__search_model(self.models_path + args[0])
-            model = args[0] + "/" + model
+            #model = self.__search_model(self.models_path + args[0])
+            model = self.models_path + args[0]
             image_path = args[1]
             use_gpu = True if args[2] else False
             num_rois = int(args[3])
 
-            print(model, image_path, use_gpu, num_rois)
+            print("------------------",model, image_path, use_gpu, num_rois)
             #Get the image
-            image = cv2.imread(image_path,0)
+            image = cv2.imread(image_path)
             #Text segmentation(areas)
                 #Text predict(text value)
                 #[Node..........]
-            tc = TexClassifier()
+            tc = TextClassifier()
             text_nodes = tc.recognize(image_path)
             #shape model predict([Node......])
-            sc = ShapeClassifier(results_path = model,use_gpu=use_gpu,num_rois=num_rois)
-            shape_nodes = sc.predict(image)
+            #bbox_threshold=0.51,
+		    #overlap_thresh_1=0.9,
+		    #overlap_thresh_2=0.2
+            sc = ShapeClassifier(results_path = model,
+            use_gpu=use_gpu,
+            num_rois=num_rois,
+            bbox_threshold=0.51,
+            overlap_thresh_1=0.9,
+            overlap_thresh_2=0.2)
+            shape_nodes = sc.predict(image,display_image=False)
             #build the graph
-            graph = Graph(text_nodes,shape_nodes)
-            graph.generate_graph()
+            graph = Graph(image_path,text_nodes,shape_nodes)
+            flow = graph.generate_graph()
             #call function to traslate to code and flowchart
             results_path = self.__get_results_path()
+            os.mkdir(self.RESULTS_PATH+results_path)
             cg = CodeGenerator(graph,results_path)
             cg.generate(0,-1)
+            fg = FlowchartGenerator(graph,flow,results_path)
+            fg.generate_flowchart()
             self.show_results(results_path)
 
     def show_results(self,results_path):
@@ -403,7 +411,7 @@ class HandlerGUI(object):
         #code visualtiation
         code_panel = tk.Text(window,width=30,height=21,font=("Arial",15))
         code_panel.pack(side = tk.LEFT,padx = 30)
-        code_text = open("results"+results_path+"code.c",'r')
+        code_text = open("results/"+results_path+"code.c",'r')
         count = 0
         while True:
             count += 1
@@ -412,7 +420,7 @@ class HandlerGUI(object):
                 break
             code_panel.insert(tk.INSERT,line)
         #image
-        img = Image.open("results/"+results_path+"image.png")
+        img = Image.open("results/"+results_path+"flowchart.png")
         img.thumbnail((500,500), Image.ANTIALIAS)
         imgL = ImageTk.PhotoImage(img)
         panel = tk.Label(window,image = imgL)

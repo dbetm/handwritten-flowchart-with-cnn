@@ -4,9 +4,9 @@ import os
 class CodeGenerator(object):
     def __init__(self,graph,file_path):
         self.FILE_PATH = "results/"+file_path+"code.c"
-        self.graph = graph
+        self.adj_list = graph.get_adyacency_list()
         print("adjacency_list = ",self.adj_list)
-        self.nodes = self.graph.get_nodes()
+        self.nodes = graph.get_nodes()
         self.pos_x = 0
         #ponter list to know how tabs need to white
         self.pointer_x_list = [0]*5
@@ -123,12 +123,13 @@ class CodeGenerator(object):
                 self.generate(self.adj_list[index][0],end_x)
             elif(self.nodes[index].get_class() == "print"):
                 #change the form to get tthe type
-                self.lines_to_write.append(self.generate_tabs(self.pos_x)+'printf('+self.get_type(self.nodes[index].get_text())+','+self.nodes[index].get_text()+');\n')
+                self.lines_to_write.append(self.generate_tabs(self.pos_x)+'printf('+self.get_type('"'+self.nodes[index].get_text()+'"')+','+ '"' + self.nodes[index].get_text() + '"' +');\n')
                 self.generate(self.adj_list[index][0],end_x)
             elif(self.nodes[index].get_class() == "start_end" and self.nodes[index].get_text()):
                 self.lines_to_write.append(self.generate_tabs(self.pos_x)+"return 0;\n");
                 self.lines_to_write.append("}\n");
-                f = open(self.FILE_PATH, "a")
+
+                f = open(self.FILE_PATH, "a+")
                 f.writelines(self.lines_to_write)
                 f.close()
             elif(self.nodes[index].get_class() == "decision"):

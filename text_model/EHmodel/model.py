@@ -14,8 +14,8 @@ from tensorflow.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.constraints import MaxNorm
 import cv2
-from dataGenerator import DataGenerator
-from data_preparation import Preproc
+from . dataGenerator import DataGenerator
+from . dataPreparation import Preproc
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
 session = InteractiveSession(config=config)
@@ -114,8 +114,8 @@ class Model(object):
         return model
 
     def separete_characteres(self,image):
-        cv2.imshow("Imagen",image)
-        cv2.waitKey(0)
+        pp = Preproc()
+        image = pp.preproc(image)
         h,w = image.shape
         print("Img tam",w,h)
         val = None
@@ -130,7 +130,6 @@ class Model(object):
             TF_list.append(val)
         flag = False
         pos = 0
-        pp = Preproc()
         res = ""
         for i in range(1,len(TF_list)):
             if(TF_list[i] == True and TF_list[i-1] == False):

@@ -83,6 +83,7 @@ class Preproc(object):
             image = cv2.resize(image,(28,28), interpolation = cv2.INTER_AREA)
         return image
     def preproc(self,image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(image,(5,5),0)
         ret3,image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         image = (255 - image)

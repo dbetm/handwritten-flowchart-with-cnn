@@ -17,13 +17,16 @@ from keras.models import Model
 from keras import backend as K
 import matplotlib.pyplot as plt
 
-from frcnn.cnn import CNN
-from frcnn.roi_helpers import ROIHelpers
-from frcnn.data_generator import Metrics
-from frcnn.utilities.config import Config
-from frcnn.utilities.parser import Parser
-from frcnn.utilities.image_tools import ImageTools
-from frcnn.utilities.config import Config
+import tensorflow as tf
+
+from . frcnn.cnn import CNN
+from . frcnn.roi_helpers import ROIHelpers
+from . frcnn.data_generator import Metrics
+from . frcnn.utilities.config import Config
+from . frcnn.utilities.parser import Parser
+from . frcnn.utilities.image_tools import ImageTools
+sys.path.append("model")
+import frcnn
 sys.path.append('..')
 from node import Node
 
@@ -146,10 +149,10 @@ class ShapeClassifier(object):
 			ratio
 		)
 		if(display_image):
-			cv2.imshow('test', img)
+			cv2.imshow('test', cv2.resize(img,(0,0), fx=0.4, fy=0.4))
 			cv2.waitKey(0)
 			cv2.destroyAllWindows()
-		
+
 		return self.generate_nodes(all_dets)
 
 
@@ -157,13 +160,14 @@ class ShapeClassifier(object):
 		"""Open .pickle file that contains configuration params of F R-CNN."""
 
 		config_path = results_path + "/config.pickle"
-		try:
-			with open(config_path, 'rb') as f_in:
-				self.config = pickle.load(f_in)
-				print("Config loaded successful!!")
-		except Exception as e:
-			print("Could not load configuration file, check results path!")
-			exit()
+		#try:
+		objects = []
+		with (open(config_path, 'rb')) as f_in:
+			self.config = pickle.load(f_in)
+		print("Config loaded successful!!")
+		#except Exception as e:
+			#print("Could not load configuration file, check results path!")
+			#exit()
 
 	def __get_real_coordinates(ratio, x1, y1, x2, y2):
 		"""Method to transform the coordinates of the bounding box to its
@@ -218,7 +222,7 @@ class ShapeClassifier(object):
 	def __load_weights(self):
 		"""Load weights for pre-trained models."""
 
-		model_path = self.config.weights_output_path
+		model_path = "model/"+self.config.weights_output_path
 		try:
 			print('Loading weights from {}'.format(model_path))
 			self.model_rpn.load_weights(model_path, by_name=True)
@@ -393,7 +397,10 @@ class ShapeClassifier(object):
 		for det in dets:
 			# if(self.__is_rectangle_arrow(det[0])):
 			# 	self.__save_rectangle_arrow(det, image, i)
-			node = Node(coordinate=det[2], class_shape=det[0])
+			print("----------shape--------------",det[2])
+			x1,y1,x2,y2 = det[2]
+			cord = [x1,x2,y1,y2]
+			node = Node(coordinate=cord, class_shape=det[0])
 			nodes.append(node)
 			#i += 1
 		return nodes

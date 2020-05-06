@@ -18,7 +18,7 @@ class FlowchartGenerator(object):
         print(self.graph_nodes)
         self.flow = flow
         self.added_nodes = []
-        self.dot = Digraph(filename=filename)
+        self.dot = Digraph(filename="results/"+filename+"flowchart")
         self.dot.format = 'png'
         self.DICT = {
             'start_end':'ellipse',

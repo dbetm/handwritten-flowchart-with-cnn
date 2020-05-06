@@ -4,26 +4,54 @@ from node import Node
 
 class Graph(object):
 
-    def __init__(self,text_nodes,shape_nodes):
+    def __init__(self,image_path,text_nodes,shape_nodes):
+        self.image_path = image_path
+        self.__set_image()
         self.text_nodes = text_nodes
         self.shape_nodes = shape_nodes
+        #print("-----------------------text nodes",self.text_nodes)
+        #print("-----------------------shape nodes",self.shape_nodes)
         self.nodes = None
         self.adj_list = None
         self.visited_list = None
+    def __set_image(self):
+        image = cv2.imread(self.image_path,0)
+        blur = cv2.GaussianBlur(image,(5,5),0)
+        ret3,image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        image = (255 - image)
+        self.image = image
+    def __exist_character(self,cordA,cordB):
+        image = self.image
+        xmin_A,xmax_A,ymin_A,ymax_A = cordA
+        xmin_B,xmax_B,ymin_B,ymax_B = cordB
+        for y in range(ymin_A,ymax_A):
+            for x in range(xmin_A,xmax_A):
+                if((y < ymin_B) and (y > ymax_B) and (x < xmin_B) and (x > xmax_B)):
+                    if(image[y,x] == 255):
+                        return True
+        return False
 
     def is_collapse(self,A,B):
         """ This function return if exist a interseccion in two nodes.
         """
-
         #[xmin,xmax,ymin,ymax]
-        coordinateA = A.get_coordinate()
+        if(type(A) is list):
+            coordinateA = A
+        else:
+            coordinateA = A.get_coordinate()
         coordinateB = B.get_coordinate()
-
-        if(coordinateA[0] > coordinateB[1] or coordinateB[0] > coordinateA[1]):
+        x = max(coordinateA[0], coordinateB[0])
+        y = max(coordinateA[2], coordinateB[2])
+        w = min(coordinateA[1], coordinateB[1]) - x
+        h = min(coordinateA[3], coordinateB[3]) - y
+        if w < 0 or h < 0:
+        	return False
+        return True
+        """if(coordinateA[0] > coordinateB[1] or coordinateB[0] > coordinateA[1]):
             return False
         if(coordinateA[3] < coordinateB[2] or coordinateB[3] < coordinateA[2]):
             return False
-        return True
+        return True"""
 
     def collapse_nodes(self):
         """
@@ -35,6 +63,65 @@ class Graph(object):
 
         text_nodes = self.text_nodes
         shape_nodes = self.shape_nodes
+        #check if exist characters or thers text nodes near to collapse
+        print("-----------antes-----------",text_nodes)
+        EXPAND_MAX = 10 #pixels
+        expand_max = EXPAND_MAX
+        for i in text_nodes:
+            xmin,xmax,ymin,ymax = i.get_coordinate()
+            expand_max = EXPAND_MAX
+            print("------------------prueba------------------",text_nodes)
+            while(True):
+                xmin = xmin - 1
+                xmax = xmax + 1
+                ymin = ymin - 1
+                ymax = ymax + 1
+                expand_max -= 1
+                if(expand_max == 0):
+                    break
+                for j in text_nodes:
+                    if i != j:
+                        if(self.is_collapse([xmin,xmax,ymin,ymax],j)):
+                            #Collapse nodes and coordinates
+                            print("Colapsaron",i,j)
+                            xmin_A,xmax_A,ymin_A,ymax_A = i.get_coordinate()
+                            xmin_B,xmax_B,ymin_B,ymax_B = j.get_coordinate()
+                            n_xmin = min(xmin_A,xmin_B)
+                            n_xmax = max(xmax_A,xmax_B)
+                            n_ymin = min(ymin_A,ymin_B)
+                            n_ymax = max(ymax_A,ymax_B)
+                            i.set_coordinate([n_xmin,n_xmax,n_ymin,n_ymax])
+                            n_text = ""
+                            if xmin_A < xmin_B:
+                                n_text += i.get_text() + " " + j.get_text()
+                            else:
+                                n_text += j.get_text() + " " + i.get_text()
+                            i.set_text(n_text)
+                            text_nodes.remove(j)
+                            break
+            xmin,xmax,ymin,ymax = i.get_coordinate()
+            expand_max = EXPAND_MAX
+
+            """while(True):
+                xmin = xmin - 1
+                xmax = xmax + 1
+                ymin = ymin - 1
+                ymax = ymax + 1
+                expand_max -= 1
+                if(expand_max == 0):
+                    break
+                query = self.__exist_character([xmin,xmax,ymin,ymax],i.get_coordinate())
+                if(query == True):
+                    while(self.__exist_character([xmin,xmax,ymin,ymax],i.get_coordinate())):
+                        xmin = xmin - 1
+                        xmax = xmax + 1
+                        ymin = ymin - 1
+                        ymax = ymax + 1
+                        expand_max -= 1
+                    i.set_coordinate([xmin,xmax,ymin,ymax])
+                    break"""
+
+        print("-----------despues-----------",text_nodes)
         nodes_to_delate = []
         collapse_list = [None]*len(text_nodes)
         for i in range(len(shape_nodes)):
@@ -75,7 +162,6 @@ class Graph(object):
                         if(dist < min_ditance):
                             min_ditance = dist
                             min_node = j
-                print("min_node",min_node,text_nodes[i])
                 shape_nodes[min_node].set_text(text_nodes[i].get_text())
                 nodes_to_delate.append(text_nodes[i])
             for i in nodes_to_delate:
@@ -148,7 +234,6 @@ class Graph(object):
             return self.visited_list[node_index] == 0 and not(previous_node in self.adj_list[node_index])
 
     def find_next(self,node_index):
-        print("Node",self.nodes[node_index])
         if(not(self.is_graph_visited())):
             #calculate the distance with another nodes
             distances = []
@@ -166,7 +251,6 @@ class Graph(object):
                             min_distance = distance
                             min_node = i
                 #min_node is the most near node
-                print("start_end",self.nodes[min_node])
                 if(self.is_any_arrow(self.nodes[min_node])):
                     #add the adyacency
                     self.adj_list[node_index].append(min_node)
@@ -190,7 +274,6 @@ class Graph(object):
                     point_to_compare = [(ac[0] + ac[1])/2,ac[2]]
                 #Arrow rectangles
                 elif(self.nodes[node_index].get_class() == "arrow_rectangle_down"):
-                    print("entreeeeeee a arrow rectangle")
                     if(self.rigth_or_left(self.nodes[node_index].get_image_path()) == "left"):
                         point_to_compare = [ac[0],ac[3]]
                     else:
@@ -263,9 +346,8 @@ class Graph(object):
         """
 
         self.nodes = self.collapse_nodes()
-        print(self.nodes)
         #print("-----------------all-----------------")
-        print(list(enumerate(self.nodes)))
+        print("collapse_nodes",list(enumerate(self.nodes)))
         #print(len(self.nodes))
         #print("---------------------------------------")
         self.adj_list = {key: [] for key in range(len(self.nodes))}
