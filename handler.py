@@ -2,6 +2,7 @@
 import os
 import json
 import sys
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import Checkbutton, IntVar
@@ -9,12 +10,16 @@ from tkinter import filedialog
 from tkinter import messagebox
 from PIL import ImageTk, Image
 import cv2
+
 from graph import Graph
 from codeGenerator import CodeGenerator
 from text_model.text_classifier import TextClassifier
 from model.shape_classifier import ShapeClassifier
 from flowchart_generator.flowchart_generator import FlowchartGenerator
+
+
 class HandlerGUI(object):
+
     def __init__(self, master, env_name):
         self.RESULTS_PATH = "results/"
         self.master = master
@@ -301,6 +306,7 @@ class HandlerGUI(object):
                 return False
         else:
             return False
+
     def __get_results_path(self):
         results_dir = os.listdir(self.RESULTS_PATH)
         return str(len(results_dir) + 1) + "/"
@@ -426,6 +432,12 @@ class HandlerGUI(object):
         panel = tk.Label(window,image = imgL)
         panel.image = imgL
         panel.pack(side = tk.LEFT)
+        # Compile code source
+        filepath = 'results/' + results_path + "code.c"
+        objectpath = 'results/' + results_path + 'code.o'
+        os.system('gcc -Wall ' + filepath + ' -o ' + objectpath)
+        os.system('echo "Compilation done!"')
+
 
 root = tk.Tk()
 # hf is the name of the Conda environment
