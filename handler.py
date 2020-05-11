@@ -309,7 +309,17 @@ class HandlerGUI(object):
 
     def __get_results_path(self):
         results_dir = os.listdir(self.RESULTS_PATH)
-        return str(len(results_dir) + 1) + "/"
+        n = len(results_dir) + 1
+
+        while(True):
+            new_dir = str(n) + "/"
+            if(os.path.isdir(self.RESULTS_PATH + new_dir)):
+                n += 1
+            else:
+                break
+
+        print('Results will be stored in: ' + new_dir)
+        return new_dir
 
     def recognize_flowchart_window(self):
         """ Recognize flowchart window.
