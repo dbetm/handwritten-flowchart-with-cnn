@@ -383,7 +383,7 @@ class HandlerGUI(object):
             model = self.models_path + args[0]
             image_path = args[1]
             use_gpu = True if args[2] else False
-            num_rois = int(args[3])
+            num_rois = 32 if args[3] == 'Type number of RoIs' else int(args[3])
 
             print("------------------",model, image_path, use_gpu, num_rois)
             #Get the image
