@@ -71,8 +71,12 @@ class Parser(object):
 			self.all_imgs[filename] = {}
 			rows = None
 			cols = None
+			if(test == True):
+				path = self.dataset_path + "/validation/images/" + filename
+			else:
+				path = self.dataset_path + "/train/images/" + filename
 			try:
-				img = cv2.imread(filename)
+				img = cv2.imread(path)
 				(rows,cols) = img.shape[:2]
 			except Exception as e:
 				print(e)
@@ -126,24 +130,23 @@ class Parser(object):
 			base_path = self.dataset_path + "/train/"
 
 		path_dataset = os.listdir(path)
-		# Get for each class folder
-		for class_i in path_dataset:
-			items_path = path + "/" + class_i + "/annots"
-			base = base_path + class_i + "/images"
-			items = os.listdir(items_path)
-			items.sort(key=Parser.get_int)
-			for item in items:
-				row = []
-				parsedXML = ET.parse(items_path + "/" + item)
-				image_path = base + "/" + (item.split(".")[0]) + ".jpg"
-				for node in parsedXML.getroot().iter('object'):
-					xmin = int(node.find('bndbox/xmin').text)
-					ymin = int(node.find('bndbox/ymin').text)
-					xmax = int(node.find('bndbox/xmax').text)
-					ymax = int(node.find('bndbox/ymax').text)
-					_class = node.find('name').text
-					row = [image_path, xmin, ymin, xmax, ymax, _class, type]
-					data.append(row)
+
+		items_path = path + "/annots"
+		items = os.listdir(items_path)
+		items.sort(key=Parser.get_int)
+
+		for item in items:
+			row = []
+			parsedXML = ET.parse(items_path + "/" + item)
+			image_name = (item.split(".")[0]) + ".jpg"
+			for node in parsedXML.getroot().iter('object'):
+				xmin = int(node.find('bndbox/xmin').text)
+				ymin = int(node.find('bndbox/ymin').text)
+				xmax = int(node.find('bndbox/xmax').text)
+				ymax = int(node.find('bndbox/ymax').text)
+				_class = node.find('name').text
+				row = [image_name, xmin, ymin, xmax, ymax, _class, type]
+				data.append(row)
 
 		return data
 
@@ -157,11 +160,11 @@ class Parser(object):
 
 if __name__ == '__main__':
 	simple_parser = Parser(
-		dataset_path="/home/david/datasets/flowchart-3b(splitter)",
+		dataset_path="/home/david/Escritorio/flowchart_3b_v3",
 		annotate_path="annotate.txt"
 	)
 	all_data, classes_count, class_mapping = simple_parser.get_data(
-		generate_annotate=False
+		generate_annotate=True
 	)
 	print(all_data)
 	print("-"*35)
