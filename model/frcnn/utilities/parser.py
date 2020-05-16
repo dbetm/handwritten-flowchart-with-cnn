@@ -56,6 +56,11 @@ class Parser(object):
 		(filename, x1, y1, x2, y2, class_name, test) = line_split
 		test = (test == "1")
 
+		if(test == True):
+			filename = self.dataset_path + "/validation/images/" + filename
+		else:
+			filename = self.dataset_path + "/train/images/" + filename
+
 		if class_name not in self.classes_count:
 			self.classes_count[class_name] = 1
 		else:
@@ -71,12 +76,8 @@ class Parser(object):
 			self.all_imgs[filename] = {}
 			rows = None
 			cols = None
-			if(test == True):
-				path = self.dataset_path + "/validation/images/" + filename
-			else:
-				path = self.dataset_path + "/train/images/" + filename
 			try:
-				img = cv2.imread(path)
+				img = cv2.imread(filename)
 				(rows,cols) = img.shape[:2]
 			except Exception as e:
 				print(e)
