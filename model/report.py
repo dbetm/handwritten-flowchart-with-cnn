@@ -433,7 +433,7 @@ class Report(object):
 		plt.ylabel("Ground-truth")
 		plt.tight_layout()
 		plt.savefig(cnf_matrix_path, dpi=300)
-
+		plt.reset()
 		# Generate results (classification report) and display them
 		results = []
 		for i in range(len(categories)):
@@ -459,13 +459,42 @@ class Report(object):
 		print(df)
 		classification_report_path = self.results_path + "classification_report.csv"
 		df.to_csv(classification_report_path)
-
+		# Generate history loss with history.csv file
+		self.generate_graphs_loss_history()
 		# Display confusion matrix image
 		plt.show()
 
+	def generate_graphs_loss_history(self):
+		"""Generate two graphs and save like images (.png) for evolution of
+		loss metric in training process.
+		"""
+
+		file_path = self.results_path + "history.csv"
+		if(os.path.isfile(file_path)):
+			data = pd.read_csv(file_path)
+			losses = np.array(data["loss"])
+			epochs = np.array(range(1, len(losses)+1))
+			plt.plot(epochs, losses, color='red')
+			plt.savefig(self.results_path + "loss_history.png", dpi=300)
+			# Generate soft loss history
+			soft_losses = []
+			local_min = losses[0]
+			for x in losses:
+				if(x < local_min):
+					local_min = x
+				soft_losses.append(local_min)
+
+			soft_losses = np.array(soft_losses)
+			plt.close()
+			plt.plot(epochs, soft_losses, color='green')
+			plt.savefig(self.results_path + "soft_loss_history.png", dpi=300)
+		else:
+			print("history.csv file not found in " + self.results_path)
+
 
 if __name__ == '__main__':
-	results_path = "training_results/1/"
-	dataset_path = "/home/octocat/Escritorio/flowchart-3b(splitter)"
-	report = Report(results_path=results_path, dataset_path=dataset_path, use_gpu=True)
-	report.generate()
+	results_path = "training_results/x/"
+	dataset_path = "/home/david/Escritorio/flowchart_3b_v3"
+	report = Report(results_path=results_path, dataset_path=dataset_path, use_gpu=False, generate_annotate=False)
+	# report.generate()
+	report.generate_graphs_loss_history()
