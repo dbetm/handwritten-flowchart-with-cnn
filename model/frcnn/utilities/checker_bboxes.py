@@ -29,12 +29,13 @@ class Checker(object):
 
 	def show_samples(self, num_imgs):
 		"""Drawing and show some sample images."""
-
-		some_imgs = self.all_imgs[:num_imgs]
+		train_images = [s for s in self.all_imgs if s['imageset'] == 'trainval']
+		num_imgs = num_imgs if num_imgs < len(train_images) else len(train_images)
+		random.shuffle(train_images)
+		some_imgs = train_images[:num_imgs]
 		print("."*45)
 
 		for img in some_imgs:
-			print(img)
 			path = img['filepath']
 			image = cv2.imread(path)
 			width = img['width']
@@ -94,11 +95,11 @@ class Checker(object):
 
 
 if __name__ == '__main__':
-	dataset_path = "/home/david/Escritorio/flowchart-3b(splitter)"
-	annotate_path = "/home/david/Escritorio/handwritten-flowchart-with-cnn/model/training_results/2/annotate2.txt"
+	dataset_path = "/home/david/Escritorio/flowchart_3b_v3"
+	annotate_path = "/home/david/Escritorio/handwritten-flowchart-with-cnn/model/frcnn/utilities/annotate.txt"
 	checker = Checker(
 		dataset_path=dataset_path,
 		annotate_path=annotate_path
 	)
 
-	checker.show_samples(150)
+	checker.show_samples(80)

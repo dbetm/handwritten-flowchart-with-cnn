@@ -429,7 +429,7 @@ class ShapeClassifier(object):
 if __name__ == '__main__':
 	#folder_numer = input("Type num folder of training results: ")
 	#folder_name = input("Folder name: ")
-	folder_number = "8"
+	folder_number = "6"
 
 	overlap_thresh_1 = 0.9
 	overlap_thresh_2 = 0.1
@@ -444,11 +444,11 @@ if __name__ == '__main__':
 		num_rois=32
 	)
 
-	test_path = "/home/david/Escritorio/"
+	test_path = "/home/david/Escritorio/miniset/2.jpg"
 
 	img_path = test_path + "rect.jpg"
 	img = cv2.imread(img_path)
-	nodes = classifier.predict(img, display_image=False)
+	nodes = classifier.predict(img, display_image=True)
 	print(*nodes)
 
 	# for i in range(len(samples)):

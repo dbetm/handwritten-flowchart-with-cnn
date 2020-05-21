@@ -81,8 +81,7 @@ class Trainer(object):
 
 	def configure(
 			self,
-			horizontal_flips,
-			vertical_flips,
+			data_augmentation,
 			num_rois,
 			weights_output_path,
 			weights_input_path,
@@ -92,8 +91,7 @@ class Trainer(object):
 		"""Set hyperparameters before the training process."""
 
 		# Config file
-		self.config.horizontal_flips = horizontal_flips
-		self.config.vertical_flips = vertical_flips
+		self.config.data_augmentation = data_augmentation
 		self.config.num_rois = num_rois
 		self.config.weights_output_path = weights_output_path
 		self.config.weights_input_path = weights_input_path
@@ -292,7 +290,7 @@ class Trainer(object):
 		self.rpn_accuracy_for_epoch = []
 
 	def __build_frcnn(self):
-		"""Create the whole model of the Faster R-CNN."""
+		"""Create the unified model Faster R-CNN."""
 
 		img_input = Input(shape=self.input_shape_image)
 		# Define the base network (VGG16)
@@ -525,15 +523,14 @@ if __name__ == '__main__':
 	results_path = "training_results/1"
 	trainer = Trainer(results_path)
 	weights_input_path = "vgg16_weights_tf_dim_ordering_tf_kernels.h5"
-	path_dataset = "/home/david/Escritorio/flowchart-3b(splitter)"
+	path_dataset = "/home/octocat/Escritorio/flowchart_3b_v3"
 	trainer.recover_data(
 		path_dataset,
 		generate_annotate=False,
 		annotate_path=results_path + "/annotate.txt"
 	)
 	trainer.configure(
-		horizontal_flips=False,
-		vertical_flips=False,
+		data_augmentation=False,
 		num_rois=32,
 		weights_output_path=results_path + "/model_frcnn.hdf5",
 		weights_input_path=weights_input_path,

@@ -2,6 +2,7 @@
 import os
 import json
 import sys
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import Checkbutton, IntVar
@@ -10,12 +11,16 @@ from tkinter import messagebox
 from tkinter.ttk import Style
 from PIL import ImageTk, Image
 import cv2
+
 from graph import Graph
 from codeGenerator import CodeGenerator
 from text_model.text_classifier import TextClassifier
 from model.shape_classifier import ShapeClassifier
 from flowchart_generator.flowchart_generator import FlowchartGenerator
+
+
 class HandlerGUI(object):
+
     def __init__(self, master, env_name):
         self.RESULTS_PATH = "results/"
         self.master = master
@@ -304,9 +309,20 @@ class HandlerGUI(object):
                 return False
         else:
             return False
+
     def __get_results_path(self):
         results_dir = os.listdir(self.RESULTS_PATH)
-        return str(len(results_dir) + 1) + "/"
+        n = len(results_dir) + 1
+
+        while(True):
+            new_dir = str(n) + "/"
+            if(os.path.isdir(self.RESULTS_PATH + new_dir)):
+                n += 1
+            else:
+                break
+
+        print('Results will be stored in: ' + new_dir)
+        return new_dir
 
     def recognize_flowchart_window(self):
         """ Recognize flowchart window.
@@ -374,7 +390,7 @@ class HandlerGUI(object):
             model = self.models_path + args[0]
             image_path = args[1]
             use_gpu = True if args[2] else False
-            num_rois = int(args[3])
+            num_rois = 32 if args[3] == 'Type number of RoIs' else int(args[3])
 
             print("------------------",model, image_path, use_gpu, num_rois)
             #Get the image
@@ -438,6 +454,12 @@ class HandlerGUI(object):
         panel = tk.Label(window,image = imgL)
         panel.image = imgL
         panel.pack(side = tk.LEFT)
+        # Compile code source
+        filepath = 'results/' + results_path + "code.c"
+        objectpath = 'results/' + results_path + 'code.o'
+        os.system('gcc -Wall ' + filepath + ' -o ' + objectpath)
+        os.system('echo "Compilation done!"')
+
 
 root = tk.Tk()
 # hf is the name of the Conda environment
