@@ -8,6 +8,7 @@ from tkinter import ttk
 from tkinter import Checkbutton, IntVar
 from tkinter import filedialog
 from tkinter import messagebox
+from tkinter.ttk import Style
 from PIL import ImageTk, Image
 import cv2
 
@@ -41,6 +42,8 @@ class HandlerGUI(object):
         self.header.pack_propagate(False)
         self.title = tk.Label(self.header,text="3b-flowchart",font=("Arial",50),bg="#943340")
         self.title.pack(pady = 5)
+        style = Style()
+        style.map('TButton', foreground = [('active', 'green')],background = [('active', 'black')])
         #Buttons
         btn1 = tk.Button(self.master,height = 4,font = ("Arial",15), width = 25,text = "Train model",command = self.train_window)
         btn1.pack(pady = 80)
@@ -326,18 +329,21 @@ class HandlerGUI(object):
         """
 
         window = tk.Toplevel(self.master)
+        header = tk.Frame(window)
+        header.config(width="400",height="50",bg="#857074")
+        header.pack(fill="y")
+        header.pack_propagate(False)
+        title = tk.Label(header,text="Recognize flowchart",font=("Arial",20),bg="#857074")
+        title.pack(pady = 5)
         window.pack_propagate(False)
-        window.title("Recognize flowchart")
-        window.config(width="400", height="525",bg="#943340")
-        title_text = tk.Label(window, text="Recognize flowchart",height=3, width=20,bg="#943340",font=("Arial",25))
-        title_text.pack()
+        window.config(width="400", height="470",bg="#943340")
 
         # Diferent models to select
         model_folder_list = os.listdir(self.models_path)
         model_folder_list.append("Select a folder of training results")
         model_folder_list.reverse()
         combobox_model_folder = ttk.Combobox(window,values = model_folder_list, width =27,font=("Arial",13))
-        combobox_model_folder.pack(pady=10)
+        combobox_model_folder.pack(pady=40)
         combobox_model_folder.current(0)
 
         # Button for select image
@@ -346,7 +352,7 @@ class HandlerGUI(object):
 
         # Use GPU
         use_gpu_val = IntVar()
-        use_gpu_check = Checkbutton(window, text="Use GPU", variable=use_gpu_val,width=20,height=2)
+        use_gpu_check = Checkbutton(window, text="Use GPU", variable=use_gpu_val,width=20,height=2,background="#943340")
         use_gpu_check.pack(pady=10)
 
         # Number of RoIs
@@ -365,6 +371,7 @@ class HandlerGUI(object):
             width=20,
             height=2,
             font=("Arial",15),
+            background="green",
             command=lambda :
                 self.predict(
                     [
@@ -375,7 +382,7 @@ class HandlerGUI(object):
                     ]
                 )
         )
-        button_predict.pack(pady=10)
+        button_predict.pack(pady=20)
 
     def predict(self, args):
         if(self.__validate_predict_inputs(args)):
@@ -403,7 +410,7 @@ class HandlerGUI(object):
             bbox_threshold=0.51,
             overlap_thresh_1=0.9,
             overlap_thresh_2=0.2)
-            shape_nodes = sc.predict(image,display_image=False)
+            shape_nodes = sc.predict(image,display_image=True)
             #build the graph
             graph = Graph(image_path,text_nodes,shape_nodes)
             flow = graph.generate_graph()
@@ -418,14 +425,18 @@ class HandlerGUI(object):
 
     def show_results(self,results_path):
         window = tk.Toplevel(self.master)
+        header = tk.Frame(window)
+        header.config(width="820",height="80",bg="#857074")
+        header.pack(fill="y")
+        header.pack_propagate(False)
+        title = tk.Label(header,text="Results",font=("Arial",50),bg="#857074")
+        title.pack(pady = 5)
         window.pack_propagate(False)
-        window.config(width="800", height="620",bg="#943340")
+        window.config(width="820", height="660",bg="#943340")
         window.title("Results")
-        #title
-        title_text = tk.Label(window,text = "Results",height = 3, width = 20, bg = "#943340",font=("Arial",25))
-        title_text.pack()
+
         #code visualtiation
-        code_panel = tk.Text(window,width=30,height=21,font=("Arial",15))
+        code_panel = tk.Text(window,width=30,height=21,font=("Arial",15),bg="#ccc5c3")
         code_panel.pack(side = tk.LEFT,padx = 30)
         code_text = open("results/"+results_path+"code.c",'r')
         count = 0
@@ -435,9 +446,10 @@ class HandlerGUI(object):
             if not line:
                 break
             code_panel.insert(tk.INSERT,line)
+        code_panel.config(state=tk.DISABLED)
         #image
         img = Image.open("results/"+results_path+"flowchart.png")
-        img.thumbnail((500,500), Image.ANTIALIAS)
+        img = img.resize((400,500), Image.ANTIALIAS)
         imgL = ImageTk.PhotoImage(img)
         panel = tk.Label(window,image = imgL)
         panel.image = imgL
