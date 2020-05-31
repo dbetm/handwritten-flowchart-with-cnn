@@ -19,12 +19,12 @@ import matplotlib.pyplot as plt
 
 import tensorflow as tf
 
-from . frcnn.cnn import CNN
-from . frcnn.roi_helpers import ROIHelpers
-from . frcnn.data_generator import Metrics
-from . frcnn.utilities.config import Config
-from . frcnn.utilities.parser import Parser
-from . frcnn.utilities.image_tools import ImageTools
+from frcnn.cnn import CNN
+from frcnn.roi_helpers import ROIHelpers
+from frcnn.data_generator import Metrics
+from frcnn.utilities.config import Config
+from frcnn.utilities.parser import Parser
+from frcnn.utilities.image_tools import ImageTools
 sys.path.append("model")
 import frcnn
 sys.path.append('..')
@@ -221,8 +221,11 @@ class ShapeClassifier(object):
 
 	def __load_weights(self):
 		"""Load weights for pre-trained models."""
+		# uncomment for integration with handler
+		#model_path = "model/"+self.config.weights_output_path
+		# comment for integration
+		model_path = self.config.weights_output_path
 
-		model_path = "model/"+self.config.weights_output_path
 		try:
 			print('Loading weights from {}'.format(model_path))
 			self.model_rpn.load_weights(model_path, by_name=True)
@@ -397,7 +400,7 @@ class ShapeClassifier(object):
 		for det in dets:
 			# if(self.__is_rectangle_arrow(det[0])):
 			# 	self.__save_rectangle_arrow(det, image, i)
-			print("----------shape--------------",det[2])
+			# print("----------shape--------------",det[2])
 			x1,y1,x2,y2 = det[2]
 			cord = [x1,x2,y1,y2]
 			node = Node(coordinate=cord, class_shape=det[0])
@@ -427,13 +430,27 @@ class ShapeClassifier(object):
 
 
 if __name__ == '__main__':
-	#folder_numer = input("Type num folder of training results: ")
+	folder_number = input("Type num folder of training results: ")
+	params_test = int(input("Type params_test (1,2,3): "))
+	test = int(input("Type number of set (1,2,3): "))
 	#folder_name = input("Folder name: ")
-	folder_number = "6"
+	#folder_number = "6"
 
-	overlap_thresh_1 = 0.9
-	overlap_thresh_2 = 0.1
-	bbox_threshold = 0.6
+	if(params_test == 1):
+		overlap_thresh_1 = 0.9
+		overlap_thresh_2 = 0.2
+		bbox_threshold = 0.51
+		folder_name = "test_1"
+	elif(params_test == 2):
+		overlap_thresh_1 = 0.7
+		overlap_thresh_2 = 0.1
+		bbox_threshold = 0.5 # volver a dejar en 0.5
+		folder_name = "test_2"
+	else:
+		overlap_thresh_1 = 0.9
+		overlap_thresh_2 = 0.1
+		bbox_threshold = 0.6
+		folder_name = "test_3"
 
 	classifier = ShapeClassifier(
 		"training_results/" + folder_number,
@@ -444,25 +461,26 @@ if __name__ == '__main__':
 		num_rois=32
 	)
 
-	test_path = "/home/david/Escritorio/miniset/2.jpg"
 
-	img_path = test_path + "rect.jpg"
-	img = cv2.imread(img_path)
-	nodes = classifier.predict(img, display_image=True)
-	print(*nodes)
+	test_path = "/home/david/Escritorio/set" + str(test) + "/"
+	folder_name += "_" + str(test)
+
+	# img_path = test_path + "rect.jpg"
+	# img = cv2.imread(img_path)
+	# nodes = classifier.predict(img, display_image=True)
+	# print(*nodes)
 
 	# for i in range(len(samples)):
 	# 	img_path = test_path + samples[i]
 	# 	img = cv2.imread(img_path)
 	# 	classifier.predict(img, display_image=False)
 
+	limit = 56
 
-
-
-	# for i in range(1, limite+1):
-	# 	img_path = test_path + str(i) + ".jpg"
-	# 	img = cv2.imread(img_path)
-	# 	# cv2.imshow('test', img)
-	# 	# cv2.waitKey(0)
-	# 	# cv2.destroyAllWindows()
-	# 	classifier.predict_and_save(img, str(i) + ".jpg", folder_name)
+	for i in range(1, limit+1):
+		img_path = test_path + str(i) + ".jpg"
+		img = cv2.imread(img_path)
+		# cv2.imshow('test', img)
+		# cv2.waitKey(0)
+		# cv2.destroyAllWindows()
+		classifier.predict_and_save(img, str(i) + ".jpg", folder_name)

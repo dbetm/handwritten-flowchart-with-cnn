@@ -81,7 +81,8 @@ class ShapeModel(object):
 	def generate_classification_report(
 		self,
 		results_path,
-		generate_annotate=False
+		generate_annotate=False,
+		use_gpu=False
 		):
 		"""Generate classification report with model pre-trained.
 			- Calculate mAP (mean Average Precision)
@@ -92,7 +93,8 @@ class ShapeModel(object):
 		report = Report(
 			results_path=results_path,
 			dataset_path=self.dataset_path,
-			generate_annotate=generate_annotate
+			generate_annotate=generate_annotate,
+			use_gpu=use_gpu
 		)
 		report.generate()
 
@@ -144,20 +146,20 @@ if __name__ == '__main__':
 	# -!-!- Temp: Unit testing for training without integration -!-!-
 
 	shape_model = ShapeModel(
-		dataset_path="/home/octocat/Escritorio/flowchart_3b_v3",
+		dataset_path="/home/david/Escritorio/flowchart_3b_v3.1",
 		num_rois=32,
 		# weights_input_path="training_results/1/flowchart_3b_model.hdf5"
 		weights_input_path="vgg16_weights_tf_dim_ordering_tf_kernels.h5"
 	)
-	# testing train
+	#testing train
 	shape_model.train(
 	    data_augmentation=True,
-	    num_epochs=30,
+	    num_epochs=1,
 		learning_rate=1e-5,
-		use_gpu=True
+		use_gpu=False
 	)
 
 	# shape_model.generate_classification_report(
-	# 	results_path = "training_results/6/",
+	# 	results_path = "training_results/5/",
 	# 	generate_annotate=False
 	# )

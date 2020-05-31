@@ -433,7 +433,9 @@ class Report(object):
 		plt.ylabel("Ground-truth")
 		plt.tight_layout()
 		plt.savefig(cnf_matrix_path, dpi=300)
-		plt.reset()
+		# Display confusion matrix image
+		plt.show()
+		plt.close()
 		# Generate results (classification report) and display them
 		results = []
 		for i in range(len(categories)):
@@ -461,8 +463,6 @@ class Report(object):
 		df.to_csv(classification_report_path)
 		# Generate history loss with history.csv file
 		self.generate_graphs_loss_history()
-		# Display confusion matrix image
-		plt.show()
 
 	def generate_graphs_loss_history(self):
 		"""Generate two graphs and save like images (.png) for evolution of
@@ -493,7 +493,7 @@ class Report(object):
 
 
 if __name__ == '__main__':
-	results_path = "training_results/x/"
+	results_path = "training_results/3/"
 	dataset_path = "/home/david/Escritorio/flowchart_3b_v3"
 	report = Report(results_path=results_path, dataset_path=dataset_path, use_gpu=False, generate_annotate=False)
 	# report.generate()

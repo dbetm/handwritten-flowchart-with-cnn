@@ -7,6 +7,7 @@ Notes:
 For now the class have a instance of tkinter, but in the future will be the Handle instance
 """
 class Preproccesor(object):
+
     def __init__(self):
         image = None
         image_path = None
