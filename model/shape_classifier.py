@@ -313,8 +313,9 @@ class ShapeClassifier(object):
 		# 	"arrow_rectangle_down",
 		# 	"arrow_rectangle_right"
 		# ]
-		original_img = copy.copy(img)
+
 		all_dets = []
+		original_img = copy.copy(img)
 		i = -1
 		for key in bboxes:
 			# if(key in rectangles_arrows):
@@ -326,6 +327,12 @@ class ShapeClassifier(object):
 				bbox,
 				np.array(probs[key])
 			)
+			print("new_boxes")
+			print(new_boxes)
+			print("new_probs")
+			print(new_probs)
+			print("-"*50)
+			x = input("")
 
 			for jk in range(new_boxes.shape[0]):
 				i += 1
@@ -333,68 +340,125 @@ class ShapeClassifier(object):
 
 				real_coords = ImageTools.get_real_coordinates(ratio, x1, y1, x2, y2)
 				real_x1, real_y1, real_x2, real_y2 = real_coords
-				# Save arrow rectangles
-				if(self.__is_rectangle_arrow(key)):
-					self.__save_rectangle_arrow(
-						(real_x1, real_y1, real_x2, real_y2),
-						original_img,
-						i
-					)
-				# Rectangle for shape or connector
-				cv2.rectangle(
-					img,
-					(real_x1, real_y1),
-					(real_x2, real_y2),
-					(
-						int(self.colors_class[key][0]),
-						int(self.colors_class[key][1]),
-						int(self.colors_class[key][2])
-					),
-					4
-				)
-
-				textLabel = '{}: {}'.format(key, int(100 * new_probs[jk]))
 				all_dets.append((key, 100 * new_probs[jk], real_coords))
 
-				(retval, baseLine) = cv2.getTextSize(
-					textLabel,
-					cv2.FONT_HERSHEY_SIMPLEX,
-					1,
-					1
-				)
-				textOrg = (real_x1, real_y1)
-				# Rectangle for text
-				cv2.rectangle(
-					img,
-					(textOrg[0] - 5, textOrg[1] + baseLine - 5),
-					(textOrg[0] + retval[0] + 5, textOrg[1] - retval[1] - 5),
-					(22, 166, 184),
-					2
-				)
-				# Fill text rectangle
-				cv2.rectangle(
-					img,
-					(textOrg[0] - 5, textOrg[1] + baseLine - 5),
-					(textOrg[0] + retval[0] + 5, textOrg[1] - retval[1] - 5),
-					(255, 255, 255),
-					-1
-				)
-				# Put class text
-				cv2.putText(
-					img,
-					textLabel,
-					textOrg,
-					cv2.FONT_HERSHEY_DUPLEX,
-					1,
-					(0, 0, 0),
-					1
-				)
-		#print(all_dets)
+		img = self.__draw_rectangles(all_dets, img)
 		return img, all_dets
+
+	def __draw_rectangles(self, all_dets, img):
+		print("!"*45)
+		print(all_dets)
+		all_dets = self.__fix_detection(all_dets)
+		print("!"*45)
+		print(all_dets)
+		exit()
+
+		for jk in range(new_boxes.shape[0]):
+			# Rectangle for shape or connector
+			cv2.rectangle(
+				img,
+				(real_x1, real_y1),
+				(real_x2, real_y2),
+				(
+					int(self.colors_class[key][0]),
+					int(self.colors_class[key][1]),
+					int(self.colors_class[key][2])
+				),
+				4
+			)
+
+			textLabel = '{}: {}'.format(key, int(100 * new_probs[jk]))
+
+
+			(retval, baseLine) = cv2.getTextSize(
+				textLabel,
+				cv2.FONT_HERSHEY_SIMPLEX,
+				1,
+				1
+			)
+			textOrg = (real_x1, real_y1)
+			# Rectangle for text
+			cv2.rectangle(
+				img,
+				(textOrg[0] - 5, textOrg[1] + baseLine - 5),
+				(textOrg[0] + retval[0] + 5, textOrg[1] - retval[1] - 5),
+				(22, 166, 184),
+				2
+			)
+			# Fill text rectangle
+			cv2.rectangle(
+				img,
+				(textOrg[0] - 5, textOrg[1] + baseLine - 5),
+				(textOrg[0] + retval[0] + 5, textOrg[1] - retval[1] - 5),
+				(255, 255, 255),
+				-1
+			)
+			# Put class text
+			cv2.putText(
+				img,
+				textLabel,
+				textOrg,
+				cv2.FONT_HERSHEY_DUPLEX,
+				1,
+				(0, 0, 0),
+				1
+			)
+		return img
+
+	def __fix_detection(self, all_dets):
+		index_to_del = []
+		x = 0
+		for key,prob,coords in all_dets:
+			print(key, prob, coords)
+			if(x in index_to_del):
+				x += 1
+				continue
+			y = 0
+
+			flag = False
+			for key_2,prob_2,coords_2 in all_dets:
+				if(x == y or y in index_to_del):
+					y += 1
+					continue
+				htal = key_2 == 'arrow_line_left' or key_2 == 'arrow_line_right'
+				vtal = key_2 == 'arrow_line_up' or key_2 == 'arrow_line_down'
+
+				if(key == 'start_end'):
+					if(key_2 == 'process' or htal):
+						if(self.__is_bbox_removable(coords, coords_2)):
+							flag = True
+					elif(key_2 == 'start_end'):
+						x1, y1, x2, y2 = coords
+						coords_pos = (x1 + x1*0.2, y1, x2 + x2*0.2, y2)
+						coords_neg = (x1 - x1*0.2, y1, x2 - x2*0.2, y2)
+						if(self.__is_bbox_removable(coords_pos, coords_2)):
+							flag = True
+						elif(self.__is_bbox_removable(coords_neg, coords_2)):
+							flag = True
+				if(flag):
+					if(prob < prob_2):
+						index_to_del.append(x)
+						x += 1
+						break
+					else:
+						index_to_del.append(y)
+				y += 1
+			x += 1
+
+		print("+"*45)
+		print(index_to_del)
+		exit()
+
+	def __is_bbox_removable(self, coords, coords_2):
+		inter_area = Metrics.intersection(coords, coords_2)
+		x1, y1, x2, y2 = coords_2
+		area_2 = float((x2 - x1) * (y2 - y1))
+		area_percent = float((inter_area * 100)) / float(area_2)
+		print("coords: {} - coords_2: {} = {}".format(coords, coords_2, area_percent))
+		return area_percent > 49.0
 
 	def generate_nodes(self, dets):
 		"""Generate nodes with detections."""
-
 		nodes = []
 		#i = 1
 		for det in dets:
@@ -443,7 +507,7 @@ if __name__ == '__main__':
 		folder_name = "test_1"
 	elif(params_test == 2):
 		overlap_thresh_1 = 0.7
-		overlap_thresh_2 = 0.1
+		overlap_thresh_2 = 0.05
 		bbox_threshold = 0.5 # volver a dejar en 0.5
 		folder_name = "test_2"
 	else:
