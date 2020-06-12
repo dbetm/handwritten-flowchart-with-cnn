@@ -67,6 +67,7 @@ class ShapeClassifier(object):
 			self.__setup()
 		# Build Faster R-CNN
 		self.__build_frcnn()
+		self.removable_threshold = 49.0
 		# saving tmp rectangles, path to save
 		self.RECTANGLES_PATH = "../Images/tmp/"
 
@@ -307,19 +308,12 @@ class ShapeClassifier(object):
 		"""Add rectangles of bounding boxes of task detection in
 		original image, add caption and probability of classification.
 		"""
-		# rectangles_arrows = [
-		# 	"arrow_rectangle_up",
-		# 	"arrow_rectangle_left",
-		# 	"arrow_rectangle_down",
-		# 	"arrow_rectangle_right"
-		# ]
 
 		all_dets = []
 		original_img = copy.copy(img)
 		i = -1
 		for key in bboxes:
-			# if(key in rectangles_arrows):
-			# 	continue
+
 			bbox = np.array(bboxes[key])
 			# apply non max suppression algorithm
 			roi_helper.set_overlap_thresh(self.overlap_thresh_2)
@@ -327,12 +321,6 @@ class ShapeClassifier(object):
 				bbox,
 				np.array(probs[key])
 			)
-			print("new_boxes")
-			print(new_boxes)
-			print("new_probs")
-			print(new_probs)
-			print("-"*50)
-			x = input("")
 
 			for jk in range(new_boxes.shape[0]):
 				i += 1
@@ -342,18 +330,19 @@ class ShapeClassifier(object):
 				real_x1, real_y1, real_x2, real_y2 = real_coords
 				all_dets.append((key, 100 * new_probs[jk], real_coords))
 
+		print("*"*45)
+		all_dets = self.__fix_detection(all_dets)
 		img = self.__draw_rectangles(all_dets, img)
+		print(*all_dets)
+		#x = input("")
+		print("#"*45)
 		return img, all_dets
 
 	def __draw_rectangles(self, all_dets, img):
-		print("!"*45)
-		print(all_dets)
-		all_dets = self.__fix_detection(all_dets)
-		print("!"*45)
-		print(all_dets)
-		exit()
 
-		for jk in range(new_boxes.shape[0]):
+		for key,prob,coords in all_dets:
+			real_x1, real_y1, real_x2, real_y2 = coords
+
 			# Rectangle for shape or connector
 			cv2.rectangle(
 				img,
@@ -367,9 +356,7 @@ class ShapeClassifier(object):
 				4
 			)
 
-			textLabel = '{}: {}'.format(key, int(100 * new_probs[jk]))
-
-
+			textLabel = '{}: {}'.format(key, int(prob))
 			(retval, baseLine) = cv2.getTextSize(
 				textLabel,
 				cv2.FONT_HERSHEY_SIMPLEX,
@@ -403,51 +390,129 @@ class ShapeClassifier(object):
 				(0, 0, 0),
 				1
 			)
+
 		return img
 
 	def __fix_detection(self, all_dets):
+		print(all_dets)
+		#print("++++")
 		index_to_del = []
 		x = 0
 		for key,prob,coords in all_dets:
-			print(key, prob, coords)
+			print("----->", key, prob, coords)
 			if(x in index_to_del):
 				x += 1
 				continue
-			y = 0
 
-			flag = False
+			y = 0
+			x1, y1, x2, y2 = coords
+
 			for key_2,prob_2,coords_2 in all_dets:
 				if(x == y or y in index_to_del):
 					y += 1
 					continue
+
+				flag = False
+				offset = False
+				no_offset = False
+				self.removable_threshold = 30.0
+
 				htal = key_2 == 'arrow_line_left' or key_2 == 'arrow_line_right'
 				vtal = key_2 == 'arrow_line_up' or key_2 == 'arrow_line_down'
 
-				if(key == 'start_end'):
+				# Calculate coordinate offset in doble detection
+				if(key == key_2):
+					width = x2 - x1
+					height = y2 - y1
+					if(key == 'start_end'):
+						coords_pos = (x1 + width*0.2, y1, x2 + width*0.2, y2)
+						coords_neg = (x1 - width*0.2, y1, x2 - width*0.2, y2)
+					elif(key == 'print' or key == 'scan' or key == 'process'):
+						coords_pos = (x1 + width*0.05, y1, x2 + width*0.05, y2)
+						coords_neg = (x1 - width*0.05, y1, x2 - width*0.05, y2)
+					elif(key == 'arrow_line_right' or key == 'arrow_line_left'):
+						coords_pos = (x1, y1 + height*0.2, x2, y2 + height*0.2)
+						coords_neg = (x1, y1 - height*0.2, x2, y2 - height*0.2)
+					elif(key == 'arrow_line_up' or key == 'arrow_line_down'):
+						coords_pos = (x1 + width*0.2, y1, x2 + width*0.2, y2)
+						coords_neg = (x1 - width*0.2, y1, x2 - width*0.2, y2)
+
+				if(key == 'print'):
+					if(key_2 == 'process' or htal or key_2 == 'start_end'):
+						no_offset = True
+					elif(key_2 == 'print'):
+						offset = True
+				elif(key == 'start_end'):
 					if(key_2 == 'process' or htal):
-						if(self.__is_bbox_removable(coords, coords_2)):
-							flag = True
+						no_offset = True
 					elif(key_2 == 'start_end'):
-						x1, y1, x2, y2 = coords
-						coords_pos = (x1 + x1*0.2, y1, x2 + x2*0.2, y2)
-						coords_neg = (x1 - x1*0.2, y1, x2 - x2*0.2, y2)
-						if(self.__is_bbox_removable(coords_pos, coords_2)):
-							flag = True
-						elif(self.__is_bbox_removable(coords_neg, coords_2)):
-							flag = True
+						offset = True
+				elif(key == 'scan'):
+					if(key_2 == 'process'):
+						no_offset = True
+					elif(key_2 == 'scan'):
+						offset = True
+				elif(key == 'process'):
+					if(key_2 == 'scan' or htal):
+						no_offset = True
+					elif(key_2 == 'process'):
+						offset = True
+				elif(key == 'arrow_line_right'):
+					if(key_2 == 'arrow_line_left'):
+						no_offset = True
+					elif(key_2 == 'arrow_line_right'):
+						offset = True
+						self.removable_threshold = 15.0
+				elif(key == 'arrow_line_left'):
+					if(key_2 == 'arrow_line_right'):
+						no_offset = True
+					elif(key_2 == 'arrow_line_left'):
+						offset = True
+						self.removable_threshold = 15.0
+				elif(key == 'arrow_line_up'):
+					if(key_2 == 'arrow_line_down'):
+						no_offset = True
+					elif(key_2 == 'arrow_line_up'):
+						offset = True
+						self.removable_threshold = 12.0
+				elif(key == 'arrow_line_down'):
+					if(key_2 == 'arrow_line_up'):
+						no_offset = True
+					elif(key_2 == 'arrow_line_down'):
+						offset = True
+						self.removable_threshold = 12.0
+				if(no_offset):
+					#print("no offset ", sep='')
+					if(self.__is_bbox_removable(coords, coords_2)):
+						flag = True
+				elif(offset):
+					#print("offset ", sep='')
+					if(self.__is_bbox_removable(coords_pos, coords_2)):
+						flag = True
+					elif(self.__is_bbox_removable(coords_neg, coords_2)):
+						flag = True
+
 				if(flag):
 					if(prob < prob_2):
 						index_to_del.append(x)
-						x += 1
+						#print("Add(1) ", x)
 						break
 					else:
 						index_to_del.append(y)
+						#print("Add(2) ", y)
 				y += 1
 			x += 1
 
-		print("+"*45)
-		print(index_to_del)
-		exit()
+		_all_dets = []
+		x = 0
+		for key,prob,coords in all_dets:
+			if(x in index_to_del):
+				x += 1
+				continue
+			_all_dets.append((key, prob, coords))
+			x += 1
+
+		return _all_dets
 
 	def __is_bbox_removable(self, coords, coords_2):
 		inter_area = Metrics.intersection(coords, coords_2)
@@ -455,7 +520,7 @@ class ShapeClassifier(object):
 		area_2 = float((x2 - x1) * (y2 - y1))
 		area_percent = float((inter_area * 100)) / float(area_2)
 		print("coords: {} - coords_2: {} = {}".format(coords, coords_2, area_percent))
-		return area_percent > 49.0
+		return area_percent > self.removable_threshold
 
 	def generate_nodes(self, dets):
 		"""Generate nodes with detections."""
@@ -508,7 +573,7 @@ if __name__ == '__main__':
 	elif(params_test == 2):
 		overlap_thresh_1 = 0.7
 		overlap_thresh_2 = 0.05
-		bbox_threshold = 0.5 # volver a dejar en 0.5
+		bbox_threshold = 0.45 # volver a dejar en 0.5
 		folder_name = "test_2"
 	else:
 		overlap_thresh_1 = 0.9
