@@ -156,19 +156,20 @@ class ShapeClassifier(object):
 
 		return self.generate_nodes(all_dets)
 
-
 	def __load_config(self, results_path):
-		"""Open .pickle file that contains configuration params of F R-CNN."""
+		"""Open .pickle file that contains configuration params of Faster
+		R-CNN.
+		"""
 
 		config_path = results_path + "/config.pickle"
-		#try:
-		objects = []
-		with (open(config_path, 'rb')) as f_in:
-			self.config = pickle.load(f_in)
-		print("Config loaded successful!!")
-		#except Exception as e:
-			#print("Could not load configuration file, check results path!")
-			#exit()
+		try:
+			objects = []
+			with (open(config_path, 'rb')) as f_in:
+				self.config = pickle.load(f_in)
+			print("Config loaded successful!!")
+		except Exception as e:
+			print("Could not load configuration file, check results path!")
+			exit()
 
 	def __get_real_coordinates(ratio, x1, y1, x2, y2):
 		"""Method to transform the coordinates of the bounding box to its
@@ -330,12 +331,9 @@ class ShapeClassifier(object):
 				real_x1, real_y1, real_x2, real_y2 = real_coords
 				all_dets.append((key, 100 * new_probs[jk], real_coords))
 
-		print("*"*45)
 		all_dets = self.__fix_detection(all_dets)
 		img = self.__draw_rectangles(all_dets, img)
-		print(*all_dets)
-		#x = input("")
-		print("#"*45)
+
 		return img, all_dets
 
 	def __draw_rectangles(self, all_dets, img):
@@ -394,12 +392,10 @@ class ShapeClassifier(object):
 		return img
 
 	def __fix_detection(self, all_dets):
-		print(all_dets)
-		#print("++++")
+
 		index_to_del = []
 		x = 0
 		for key,prob,coords in all_dets:
-			print("----->", key, prob, coords)
 			if(x in index_to_del):
 				x += 1
 				continue
@@ -482,11 +478,9 @@ class ShapeClassifier(object):
 						offset = True
 						self.removable_threshold = 12.0
 				if(no_offset):
-					#print("no offset ", sep='')
 					if(self.__is_bbox_removable(coords, coords_2)):
 						flag = True
 				elif(offset):
-					#print("offset ", sep='')
 					if(self.__is_bbox_removable(coords_pos, coords_2)):
 						flag = True
 					elif(self.__is_bbox_removable(coords_neg, coords_2)):
@@ -495,11 +489,9 @@ class ShapeClassifier(object):
 				if(flag):
 					if(prob < prob_2):
 						index_to_del.append(x)
-						#print("Add(1) ", x)
 						break
 					else:
 						index_to_del.append(y)
-						#print("Add(2) ", y)
 				y += 1
 			x += 1
 
@@ -515,26 +507,26 @@ class ShapeClassifier(object):
 		return _all_dets
 
 	def __is_bbox_removable(self, coords, coords_2):
+		"""Check if exists an area overlap greater than a threshold
+		for remove an bounding box."""
+
 		inter_area = Metrics.intersection(coords, coords_2)
 		x1, y1, x2, y2 = coords_2
 		area_2 = float((x2 - x1) * (y2 - y1))
-		area_percent = float((inter_area * 100)) / float(area_2)
-		print("coords: {} - coords_2: {} = {}".format(coords, coords_2, area_percent))
-		return area_percent > self.removable_threshold
+		percent_area = float((inter_area * 100)) / float(area_2)
+
+		return percent_area > self.removable_threshold
 
 	def generate_nodes(self, dets):
 		"""Generate nodes with detections."""
+
 		nodes = []
-		#i = 1
 		for det in dets:
-			# if(self.__is_rectangle_arrow(det[0])):
-			# 	self.__save_rectangle_arrow(det, image, i)
-			# print("----------shape--------------",det[2])
-			x1,y1,x2,y2 = det[2]
+			x1, y1, x2, y2 = det[2]
 			cord = [x1,x2,y1,y2]
 			node = Node(coordinate=cord, class_shape=det[0])
 			nodes.append(node)
-			#i += 1
+
 		return nodes
 
 	def __is_rectangle_arrow(self, class_shape):
@@ -547,52 +539,50 @@ class ShapeClassifier(object):
 
 		return ans
 
-	def __save_rectangle_arrow(self, coords, image, i):
-		"""Assign a name according to the detection index."""
-		# coordinates (x1, y1, x2, y2)
-		x = coords[0]
-		y = coords[1]
-		w = coords[2] - coords[0]
-		h = coords[3] - coords[1]
-		crop_img = image[y:y+h, x:x+w]
-		cv2.imwrite(self.RECTANGLES_PATH + str(i) + ".jpg", crop_img)
-
 
 if __name__ == '__main__':
-	folder_number = input("Type num folder of training results: ")
-	params_test = int(input("Type params_test (1,2,3): "))
-	test = int(input("Type number of set (1,2,3): "))
-	#folder_name = input("Folder name: ")
-	#folder_number = "6"
+	# folder_number = input("Type num folder of training results: ")
+	# params_test = int(input("Type params_test (1,2,3): "))
+	# test = int(input("Type number of set (1,2,3): "))
+	#
+	# if(params_test == 1):
+	# 	overlap_thresh_1 = 0.9
+	# 	overlap_thresh_2 = 0.2
+	# 	bbox_threshold = 0.51
+	# 	folder_name = "test_1"
+	# elif(params_test == 2):
+	# 	overlap_thresh_1 = 0.7
+	# 	overlap_thresh_2 = 0.05
+	# 	bbox_threshold = 0.45
+	# 	folder_name = "test_2"
+	# else:
+	# 	overlap_thresh_1 = 0.9
+	# 	overlap_thresh_2 = 0.1
+	# 	bbox_threshold = 0.6
+	# 	folder_name = "test_3"
 
-	if(params_test == 1):
-		overlap_thresh_1 = 0.9
-		overlap_thresh_2 = 0.2
-		bbox_threshold = 0.51
-		folder_name = "test_1"
-	elif(params_test == 2):
-		overlap_thresh_1 = 0.7
-		overlap_thresh_2 = 0.05
-		bbox_threshold = 0.45 # volver a dejar en 0.5
-		folder_name = "test_2"
-	else:
-		overlap_thresh_1 = 0.9
-		overlap_thresh_2 = 0.1
-		bbox_threshold = 0.6
-		folder_name = "test_3"
+	overlap_thresh_1 = 0.7
+	overlap_thresh_2 = 0.05
+	bbox_threshold = 0.45
 
+	img_path = "/home/david/Escritorio/set12/11.jpg"
+
+	# The best model is in folder 9 (training results)
 	classifier = ShapeClassifier(
-		"training_results/" + folder_number,
+		results_path="training_results/9",
 		use_gpu=False,
 		overlap_thresh_1=overlap_thresh_1,
 		overlap_thresh_2=overlap_thresh_2,
 		bbox_threshold=bbox_threshold,
 		num_rois=32
 	)
+	image = cv2.imread(img_path)
+	nodes = classifier.predict(image, True)
+	print(*enumerate(nodes))
 
 
-	test_path = "/home/david/Escritorio/set" + str(test) + "/"
-	folder_name += "_" + str(test)
+	# test_path = "/home/david/Escritorio/set" + str(test) + "/"
+	# folder_name += "_" + str(test)
 
 	# img_path = test_path + "rect.jpg"
 	# img = cv2.imread(img_path)
@@ -604,12 +594,20 @@ if __name__ == '__main__':
 	# 	img = cv2.imread(img_path)
 	# 	classifier.predict(img, display_image=False)
 
-	limit = 56
-
-	for i in range(1, limit+1):
-		img_path = test_path + str(i) + ".jpg"
-		img = cv2.imread(img_path)
-		# cv2.imshow('test', img)
-		# cv2.waitKey(0)
-		# cv2.destroyAllWindows()
-		classifier.predict_and_save(img, str(i) + ".jpg", folder_name)
+	# classifier = ShapeClassifier(
+	# 	results_path="training_results/" + folder_number,
+	# 	use_gpu=False,
+	# 	overlap_thresh_1=overlap_thresh_1,
+	# 	overlap_thresh_2=overlap_thresh_2,
+	# 	bbox_threshold=bbox_threshold,
+	# 	num_rois=32
+	# )
+	#
+	# limit = 56
+	# for i in range(1, limit+1):
+	# 	img_path = test_path + str(i) + ".jpg"
+	# 	img = cv2.imread(img_path)
+	# 	# cv2.imshow('test', img)
+	# 	# cv2.waitKey(0)
+	# 	# cv2.destroyAllWindows()
+	# 	classifier.predict_and_save(img, str(i) + ".jpg", folder_name)
