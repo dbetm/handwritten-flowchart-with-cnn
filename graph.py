@@ -6,7 +6,7 @@ class Graph(object):
 
     def __init__(self,image_path,text_nodes,shape_nodes):
         self.image_path = image_path
-        self.__set_image()
+        self.__set_image(image_path)
         self.text_nodes = text_nodes
         self.shape_nodes = shape_nodes
         #print("-----------------------text nodes",self.text_nodes)
@@ -14,12 +14,12 @@ class Graph(object):
         self.nodes = None
         self.adj_list = None
         self.visited_list = None
-    def __set_image(self):
-        image = cv2.imread(self.image_path,0)
+    def __set_image(self,image_path):
+        image = cv2.imread(image_path,0)
         blur = cv2.GaussianBlur(image,(5,5),0)
         ret3,image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         image = (255 - image)
-        self.image = image
+        return image
     def __exist_character(self,cordA,cordB):
         image = self.image
         xmin_A,xmax_A,ymin_A,ymax_A = cordA
@@ -53,6 +53,7 @@ class Graph(object):
             return False
         return True"""
 
+
     def collapse_nodes(self):
         """
         Check the text nodes that are inside of a shape node
@@ -60,68 +61,10 @@ class Graph(object):
         set de value in shape node
         *check if exist more than one overlaping text nodes if is the case calculate the distance and the less distance it will be the true text in te shape node.
         """
-
         text_nodes = self.text_nodes
         shape_nodes = self.shape_nodes
         #check if exist characters or thers text nodes near to collapse
-        print("-----------antes-----------",text_nodes)
-        EXPAND_MAX = 10 #pixels
-        expand_max = EXPAND_MAX
-        for i in text_nodes:
-            xmin,xmax,ymin,ymax = i.get_coordinate()
-            expand_max = EXPAND_MAX
-            print("------------------prueba------------------",text_nodes)
-            while(True):
-                xmin = xmin - 1
-                xmax = xmax + 1
-                ymin = ymin - 1
-                ymax = ymax + 1
-                expand_max -= 1
-                if(expand_max == 0):
-                    break
-                for j in text_nodes:
-                    if i != j:
-                        if(self.is_collapse([xmin,xmax,ymin,ymax],j)):
-                            #Collapse nodes and coordinates
-                            print("Colapsaron",i,j)
-                            xmin_A,xmax_A,ymin_A,ymax_A = i.get_coordinate()
-                            xmin_B,xmax_B,ymin_B,ymax_B = j.get_coordinate()
-                            n_xmin = min(xmin_A,xmin_B)
-                            n_xmax = max(xmax_A,xmax_B)
-                            n_ymin = min(ymin_A,ymin_B)
-                            n_ymax = max(ymax_A,ymax_B)
-                            i.set_coordinate([n_xmin,n_xmax,n_ymin,n_ymax])
-                            n_text = ""
-                            if xmin_A < xmin_B:
-                                n_text += i.get_text() + " " + j.get_text()
-                            else:
-                                n_text += j.get_text() + " " + i.get_text()
-                            i.set_text(n_text)
-                            text_nodes.remove(j)
-                            break
-            xmin,xmax,ymin,ymax = i.get_coordinate()
-            expand_max = EXPAND_MAX
 
-            """while(True):
-                xmin = xmin - 1
-                xmax = xmax + 1
-                ymin = ymin - 1
-                ymax = ymax + 1
-                expand_max -= 1
-                if(expand_max == 0):
-                    break
-                query = self.__exist_character([xmin,xmax,ymin,ymax],i.get_coordinate())
-                if(query == True):
-                    while(self.__exist_character([xmin,xmax,ymin,ymax],i.get_coordinate())):
-                        xmin = xmin - 1
-                        xmax = xmax + 1
-                        ymin = ymin - 1
-                        ymax = ymax + 1
-                        expand_max -= 1
-                    i.set_coordinate([xmin,xmax,ymin,ymax])
-                    break"""
-
-        print("-----------despues-----------",text_nodes)
         nodes_to_delate = []
         collapse_list = [None]*len(text_nodes)
         for i in range(len(shape_nodes)):
@@ -140,8 +83,6 @@ class Graph(object):
                             shape_nodes[i].set_text(text_nodes[j].get_text())
                             collapse_list[j] == i
                             break;
-
-
         #Delate all the nodes that are inside a shape_nodes
         for i in nodes_to_delate:
             text_nodes.remove(i)
@@ -215,7 +156,7 @@ class Graph(object):
 
     def find_first_state(self):
         for node in self.nodes:
-            if(node.get_class() == "start_end" and node.get_text() == "inicio"):
+            if(node.get_class() == "start_end" and node.get_text().lower() == "inicio"):
                 return self.nodes.index(node)
         return -1
 
@@ -228,7 +169,7 @@ class Graph(object):
     def can_visit(self,previous_node,node_index):
         if(self.nodes[node_index].get_class() == "decision"):
             return self.visited_list[node_index] <= 1 and not(previous_node in self.adj_list[node_index])
-        elif(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text() == "fin"):
+        elif(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text().lower() == "fin"):
             return not(previous_node in self.adj_list[node_index])
         else:
             return self.visited_list[node_index] == 0 and not(previous_node in self.adj_list[node_index])
@@ -243,7 +184,7 @@ class Graph(object):
             to_compare = None
             #check only with the posibles
             #if is start end:start
-            if(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text() == "inicio"):
+            if(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text().lower() == "inicio"):
                 for i in range(len(self.nodes)):
                     if(node_index != i and self.can_visit(node_index,i)):
                         distance = self.calculate_distance(self.nodes[node_index],self.nodes[i])
@@ -323,7 +264,7 @@ class Graph(object):
             elif(self.nodes[node_index].get_class() == "decision"):
                 if(self.visited_list[node_index]==0):
                     for i in range(len(self.nodes)):
-                        if(node_index != i and self.can_visit(node_index,i)):
+                        if(node_index != i and self.can_visit(node_index,i) and self.nodes[i].get_text() != None):
                             distance = self.calculate_distance(self.nodes[node_index],self.nodes[i])
                             distances.append(distance)
                             nodes_prompter.append(i)
@@ -353,6 +294,7 @@ class Graph(object):
         self.adj_list = {key: [] for key in range(len(self.nodes))}
         self.visited_list = [0]*len(self.nodes)
         first_state = self.find_first_state()
+        print("primer",first_state)
         if(first_state == -1):
             return "Not valid init"
         if(self.find_next(first_state) == "NV"):

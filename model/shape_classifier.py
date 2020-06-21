@@ -16,15 +16,14 @@ from keras.layers import Input
 from keras.models import Model
 from keras import backend as K
 import matplotlib.pyplot as plt
-
 import tensorflow as tf
 
-from frcnn.cnn import CNN
-from frcnn.roi_helpers import ROIHelpers
-from frcnn.data_generator import Metrics
-from frcnn.utilities.config import Config
-from frcnn.utilities.parser import Parser
-from frcnn.utilities.image_tools import ImageTools
+from . frcnn.cnn import CNN
+from . frcnn.roi_helpers import ROIHelpers
+from . frcnn.data_generator import Metrics
+from . frcnn.utilities.config import Config
+from . frcnn.utilities.parser import Parser
+from . frcnn.utilities.image_tools import ImageTools
 sys.path.append("model")
 import frcnn
 sys.path.append('..')
@@ -226,7 +225,7 @@ class ShapeClassifier(object):
 		# uncomment for integration with handler
 		#model_path = "model/"+self.config.weights_output_path
 		# comment for integration
-		model_path = self.config.weights_output_path
+		model_path = "model/"+self.config.weights_output_path
 
 		try:
 			print('Loading weights from {}'.format(model_path))
@@ -561,7 +560,7 @@ if __name__ == '__main__':
 	# 	bbox_threshold = 0.6
 	# 	folder_name = "test_3"
 
-	overlap_thresh_1 = 0.7
+	"""overlap_thresh_1 = 0.7
 	overlap_thresh_2 = 0.05
 	bbox_threshold = 0.45
 
@@ -578,7 +577,7 @@ if __name__ == '__main__':
 	)
 	image = cv2.imread(img_path)
 	nodes = classifier.predict(image, True)
-	print(*enumerate(nodes))
+	print(*enumerate(nodes))"""
 
 
 	# test_path = "/home/david/Escritorio/set" + str(test) + "/"

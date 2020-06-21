@@ -4,27 +4,50 @@ Image renderings and text are created on the fly each time.
 """
 
 from itertools import groupby
-
-import data.preproc as pp
+from . import preproc as pp
 import h5py
 import numpy as np
 import unicodedata
 import cv2
-
+import os
+source = "iam"
+source_path = os.path.join("text_model","data_model",f"{source}.hdf5")
 class DataGenerator():
     """Generator class with data streaming"""
 
-    def __init__(self, source, batch_size, charset, max_text_length, predict=False):
+    def __init__(self, source, batch_size, charset, max_text_length, predict=False,load_data = True):
         self.tokenizer = Tokenizer(charset, max_text_length)
         self.batch_size = batch_size
         self.partitions = ['test'] if predict else ['train', 'valid', 'test']
-
         self.size = dict()
         self.steps = dict()
         self.index = dict()
         self.dataset = dict()
 
-        with h5py.File(source, "r") as f:
+        if load_data:
+            with h5py.File(source, "r") as f:
+                for pt in self.partitions:
+                    self.dataset[pt] = dict()
+
+                    self.dataset[pt]['dt'] = np.array(f[pt]['dt'])
+                    self.dataset[pt]['gt'] = np.array(f[pt]['gt'])
+
+                    randomize = np.arange(len(self.dataset[pt]['gt']))
+                    np.random.seed(42)
+                    np.random.shuffle(randomize)
+
+                    self.dataset[pt]['dt'] = self.dataset[pt]['dt'][randomize]
+                    self.dataset[pt]['gt'] = self.dataset[pt]['gt'][randomize]
+            for pt in self.partitions:
+                # decode sentences from byte
+                self.dataset[pt]['gt'] = [x.decode() for x in self.dataset[pt]['gt']]
+
+                # set size and setps
+                self.size[pt] = len(self.dataset[pt]['gt'])
+                self.steps[pt] = int(np.ceil(self.size[pt] / self.batch_size))
+                self.index[pt] = 0
+    def load_data(self):
+        with h5py.File(source_path, "r") as f:
             for pt in self.partitions:
                 self.dataset[pt] = dict()
 
@@ -37,7 +60,6 @@ class DataGenerator():
 
                 self.dataset[pt]['dt'] = self.dataset[pt]['dt'][randomize]
                 self.dataset[pt]['gt'] = self.dataset[pt]['gt'][randomize]
-
         for pt in self.partitions:
             # decode sentences from byte
             self.dataset[pt]['gt'] = [x.decode() for x in self.dataset[pt]['gt']]
@@ -46,10 +68,8 @@ class DataGenerator():
             self.size[pt] = len(self.dataset[pt]['gt'])
             self.steps[pt] = int(np.ceil(self.size[pt] / self.batch_size))
             self.index[pt] = 0
-
     def next_train_batch(self):
         """Get the next batch from train partition (yield)"""
-
         while True:
             if self.index['train'] >= self.size['train']:
                 self.index['train'] = 0

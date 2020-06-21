@@ -8,7 +8,14 @@ class Node(object):
         self.text = text
         self.class_shape = class_shape
         self.image_path = image_path
-
+    def collapse(self,node):
+        xmin_A,xmax_A,ymin_A,ymax_A = self.get_coordinate()
+        xmin_B,xmax_B,ymin_B,ymax_B = node.get_coordinate()
+        n_xmin = min(xmin_A,xmin_B)
+        n_xmax = max(xmax_A,xmax_B)
+        n_ymin = min(ymin_A,ymin_B)
+        n_ymax = max(ymax_A,ymax_B)
+        self.set_coordinate([n_xmin,n_xmax,n_ymin,n_ymax])
     def get_coordinate(self):
         """Returns a tuple (x1, x2, y1, y2)."""
 

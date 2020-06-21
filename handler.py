@@ -12,16 +12,42 @@ from tkinter.ttk import Style
 from PIL import ImageTk, Image
 import cv2
 
+from node import Node
 from graph import Graph
 from codeGenerator import CodeGenerator
+from text_model.data.reader import Dataset
 from text_model.text_classifier import TextClassifier
 from model.shape_classifier import ShapeClassifier
 from flowchart_generator.flowchart_generator import FlowchartGenerator
-
-
+class VerticalScrolledFrame(tk.Frame):
+    def __init__(self, parent, *args, **kw):
+        tk.Frame.__init__(self, parent, *args, **kw)
+        vscrollbar = tk.Scrollbar(self, orient=tk.VERTICAL,width=20)
+        vscrollbar.pack(fill=tk.Y, side=tk.RIGHT, expand=tk.TRUE)
+        canvas = tk.Canvas(self, bd=0, highlightthickness=0,
+                        yscrollcommand=vscrollbar.set,height = 500)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
+        vscrollbar.config(command=canvas.yview)
+        canvas.xview_moveto(0)
+        canvas.yview_moveto(0)
+        self.interior = interior = tk.Frame(canvas)
+        interior_id = canvas.create_window(0, 0, window=interior,
+                                           anchor=tk.NW)
+        def _configure_interior(event):
+            size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
+            canvas.config(scrollregion="0 0 %s %s" % size)
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                canvas.config(width=interior.winfo_reqwidth())
+        interior.bind('<Configure>', _configure_interior)
+        def _configure_canvas(event):
+            if interior.winfo_reqwidth() != canvas.winfo_width():
+                canvas.itemconfigure(interior_id, width=canvas.winfo_width())
+        canvas.bind('<Configure>', _configure_canvas)
+        interior.bind_all('<MouseWheel>', lambda event:     vscrollbar.yview("scroll",event.delta,"units"))
 class HandlerGUI(object):
 
     def __init__(self, master, env_name):
+        self.ds = Dataset(source="", name="iam")
         self.RESULTS_PATH = "results/"
         self.master = master
         ##Init of the master view
@@ -383,7 +409,74 @@ class HandlerGUI(object):
                 )
         )
         button_predict.pack(pady=20)
-
+    def __continue_process(self,text_nodes,shape_nodes,image_path):
+        print(text_nodes,shape_nodes)
+        graph = Graph(image_path,text_nodes,shape_nodes)
+        flow = graph.generate_graph()
+        #call function to traslate to code and flowchart
+        results_path = self.__get_results_path()
+        os.mkdir(self.RESULTS_PATH+results_path)
+        cg = CodeGenerator(graph,results_path)
+        cg.generate_code(graph.find_first_state(),-1)
+        fg = FlowchartGenerator(graph,flow,results_path)
+        fg.generate_flowchart()
+        self.show_results(results_path)
+    def __train_now(self,images,words):
+            self.ds.save_new_data(images,words)
+            self.tc.train_new_data()
+    def __train_or_show(self,new_texts,text_nodes,shape_nodes,image_path,images):
+        print(new_texts,text_nodes)
+        for node,text in zip(text_nodes,new_texts):
+            node.set_text(text)
+        window = tk.Toplevel(self.master)
+        header = tk.Frame(window)
+        header.config(width="400",height="50",bg="#857074")
+        header.pack(fill="y")
+        header.pack_propagate(False)
+        title = tk.Label(header,text="",font=("Arial",20),bg="#857074")
+        title.pack(pady = 5)
+        window.pack_propagate(False)
+        window.config(width="400", height="200",bg="#943340")
+        train_now = tk.Button(window,text="Train model now",font=("Arial",15),
+        background="green",command = lambda:self.__train_now(images,new_texts))
+        train_now.pack(pady = 10)
+        train_after = tk.Button(window,text="Train model later",font=("Arial",15),
+        background="green",command = lambda:self.__continue_process(text_nodes,shape_nodes,image_path))
+        train_after.pack(pady = 10)
+    def edit_text(self,text_nodes,shape_nodes,image_path):
+        text_nodes = list(text_nodes)
+        window = tk.Toplevel(self.master)
+        header = tk.Frame(window)
+        header.config(width="400",height="50",bg="#857074")
+        header.pack(fill="y")
+        header.pack_propagate(False)
+        title = tk.Label(header,text="Edit text",font=("Arial",20),bg="#857074")
+        title.pack(pady = 5)
+        message = tk.Label(window,text="If text prediction are not aceptable please edit it",font=("Arial",12),bg="#857074")
+        message.pack(pady = 5)
+        window.pack_propagate(False)
+        window.config(width="400", height="600",bg="#943340")
+        entrys = []
+        aux = [x[0] for x in text_nodes]
+        imgs = [x[1] for x in text_nodes]
+        continue_btn = tk.Button(window,text = "Continue",background="green",command = lambda: self.__train_or_show([x.get() for x in entrys],aux,shape_nodes,image_path,imgs))
+        continue_btn.pack()
+        display = tk.Frame(window)
+        display.pack(fill="x",pady=10,side=tk.LEFT,anchor=tk.N)
+        display.config(bg="#454545",width="700",height="400")
+        scframe = VerticalScrolledFrame(display)
+        scframe.pack()
+        for node in text_nodes:
+            index = tk.Frame(scframe.interior,relief = tk.RAISED)
+            index.pack(pady = 15)
+            imgL = ImageTk.PhotoImage(image = Image.fromarray(node[1]))
+            img = tk.Label(index,image = imgL)
+            img.image = imgL
+            img.pack()
+            txt = tk.Entry(index, width=100,font="Arial")
+            entrys.append(txt)
+            txt.insert(0,str(node[0].get_text()))
+            txt.pack()
     def predict(self, args):
         if(self.__validate_predict_inputs(args)):
             #model = self.__search_model(self.models_path + args[0])
@@ -398,12 +491,6 @@ class HandlerGUI(object):
             #Text segmentation(areas)
                 #Text predict(text value)
                 #[Node..........]
-            tc = TextClassifier()
-            text_nodes = tc.recognize(image_path)
-            #shape model predict([Node......])
-            #bbox_threshold=0.51,
-		    #overlap_thresh_1=0.9,
-		    #overlap_thresh_2=0.2
             sc = ShapeClassifier(results_path = model,
             use_gpu=use_gpu,
             num_rois=num_rois,
@@ -412,16 +499,10 @@ class HandlerGUI(object):
             overlap_thresh_2=0.2)
             shape_nodes = sc.predict(image,display_image=True)
             #build the graph
-            graph = Graph(image_path,text_nodes,shape_nodes)
-            flow = graph.generate_graph()
-            #call function to traslate to code and flowchart
-            results_path = self.__get_results_path()
-            os.mkdir(self.RESULTS_PATH+results_path)
-            cg = CodeGenerator(graph,results_path)
-            cg.generate(0,-1)
-            fg = FlowchartGenerator(graph,flow,results_path)
-            fg.generate_flowchart()
-            self.show_results(results_path)
+            self.tc = TextClassifier()
+            text_nodes = self.tc.recognize(image_path)
+            #collapse text nodes
+            self.edit_text(text_nodes,shape_nodes,image_path)
 
     def show_results(self,results_path):
         window = tk.Toplevel(self.master)

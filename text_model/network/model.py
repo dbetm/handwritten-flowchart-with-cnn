@@ -12,7 +12,7 @@ from tensorflow.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.constraints import MaxNorm
 
-from network.layers import FullGatedConv2D, GatedConv2D, OctConv2D
+from . layers import FullGatedConv2D, GatedConv2D, OctConv2D
 from tensorflow.keras.layers import Conv2D, Bidirectional, LSTM, GRU, Dense
 from tensorflow.keras.layers import Dropout, BatchNormalization, LeakyReLU, PReLU
 from tensorflow.keras.layers import Input, Add, Activation, Lambda, MaxPooling2D, Reshape
@@ -74,6 +74,40 @@ class HTRModel:
                 self.compile()
 
             self.model.load_weights(target)
+    def get_callbacks_continue(self, logdir, checkpoint, monitor="val_loss", verbose=0):
+        callbacks = [
+            CSVLogger(
+                filename=os.path.join(logdir, "epochs.log"),
+                separator=";",
+                append=True),
+            TensorBoard(
+                log_dir=logdir,
+                histogram_freq=10,
+                profile_batch=0,
+                write_graph=True,
+                write_images=False,
+                update_freq="epoch"),
+            ModelCheckpoint(
+                filepath=checkpoint,
+                monitor=monitor,
+                save_best_only=True,
+                save_weights_only=True,
+                verbose=verbose),
+            EarlyStopping(
+                monitor=monitor,
+                min_delta=1e-8,
+                patience=0,
+                restore_best_weights=True,
+                verbose=verbose),
+            ReduceLROnPlateau(
+                monitor=monitor,
+                min_delta=1e-8,
+                factor=0.2,
+                patience=15,
+                verbose=verbose)
+        ]
+
+        return callbacks
     def get_callbacks(self, logdir, checkpoint, monitor="val_loss", verbose=0):
         """Setup the list of callbacks for the model"""
 

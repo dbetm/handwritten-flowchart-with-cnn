@@ -1,0 +1,17 @@
+digraph {
+	0 [label=inicio shape=ellipse]
+	5 [label="cont = 2" shape=box]
+	0 -> 5
+	7 [label=cont shape=invhouse]
+	2 -> 7 [label="Sí"]
+	7 -> 2
+	2 -> 1 [label=No]
+	{
+		rank=same
+		2 [label="cont <= 100" shape=diamond]
+		1 [label=fin shape=ellipse]
+	}
+	6 [label="cont = cont + 2" shape=box]
+	6 -> 2
+	7 -> 6
+}
