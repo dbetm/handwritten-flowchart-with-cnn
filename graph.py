@@ -6,7 +6,7 @@ class Graph(object):
 
     def __init__(self,image_path,text_nodes,shape_nodes):
         self.image_path = image_path
-        self.__set_image()
+        #self.__set_image()
         self.text_nodes = text_nodes
         self.shape_nodes = shape_nodes
         #print("-----------------------text nodes",self.text_nodes)
