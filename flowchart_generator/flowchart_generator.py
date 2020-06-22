@@ -83,11 +83,7 @@ class FlowchartGenerator(object):
     def __build_node(self, _class, text, key):
         if not(key in self.added_nodes):
             type = self.__get_type_node(_class)
-            if(_class == 'print'):
-                img_path = os.getcwd() + "/assets/print_2.svg"
-                self.dot.node(str(key), label=text, shape='none', image=img_path)
-            else:
-                self.dot.node(str(key), label=text, shape=type)
+            self.dot.node(str(key), label=text, shape=type)
             self.added_nodes.append(key)
 
     def __add_subgraph(self, _class, key, last_key=None, text_edge=None):
