@@ -1,7 +1,0 @@
-digraph {
-	0 [label=Inicio shape=ellipse]
-	2 [label="Hola mundo" shape=invhouse]
-	0 -> 2
-	1 [label=Fin shape=ellipse]
-	2 -> 1
-}

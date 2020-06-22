@@ -15,7 +15,6 @@ class CodeGenerator(object):
         self.type_map = {"int":'"%d"',"double":'"%f"',"char":'"%c"'}
         self.collapse_end_node()
         print("adjacency_list 2= ",self.adj_list)
-        convexhull
     def collapse_end_node(self):
         cont = 0
         end_node = None

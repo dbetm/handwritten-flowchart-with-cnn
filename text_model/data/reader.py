@@ -10,8 +10,10 @@ from functools import partial
 from glob import glob
 from multiprocessing import Pool
 import h5py
+new = "new_data"
 source = "iam"
 arch = "puigcerver"
+new_source_path = os.path.join("text_model","data_model",f"{new}.hdf5")
 source_path = os.path.join("text_model","data_model",f"{source}.hdf5")
 output_path = os.path.join("text_model","output",source,arch)
 target_path = os.path.join(output_path,"checkpoint_weights.hdf5")
@@ -108,23 +110,19 @@ class Dataset():
     def save_new_data(self,images,words):
         print("##### Save new data ##########")
         dataset = dict()
-        hf = h5py.File(source_path, "r")
-        for pt in self.partitions:
-            dataset[pt] = dict()
-            dataset[pt]['dt'] = list(hf[pt]['dt'])
-            dataset[pt]['gt'] = list(hf[pt]['gt'])
-        hf.close()
+        dataset = dict()
+        dataset = {"dt": [], "gt": []}
         for image,word in zip(images,words):
             text = pp.text_standardize(word)
             if self.check_text(text):
-                dataset["train"]['gt'].append(text.encode())
+                dataset['gt'].append(text.encode())
                 #change the preprocess
-                dataset["train"]["dt"].append(pp.resize_new_data(image,(1024,128)))
-        os.remove(source_path)
-        hf = h5py.File(source_path,'a')
-        for i in self.partitions:
-            hf.create_dataset(f"{i}/dt", data=dataset[i]['dt'], compression="gzip", compression_opts=9)
-            hf.create_dataset(f"{i}/gt", data=dataset[i]['gt'], compression="gzip", compression_opts=9)
+                dataset["dt"].append(pp.resize_new_data(image,(1024,128)))
+        if(os.path.isfile(new_source_path)):
+            os.remove(new_source_path)
+        hf = h5py.File(new_source_path,'a')
+        hf.create_dataset("/dt", data=dataset['dt'], compression="gzip", compression_opts=9)
+        hf.create_dataset("/gt", data=dataset['gt'], compression="gzip", compression_opts=9)
         hf.close()
         dataset.clear()
         print("##### Save new data ##########")

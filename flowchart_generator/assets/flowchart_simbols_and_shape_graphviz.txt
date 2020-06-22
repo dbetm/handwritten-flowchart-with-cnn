@@ -1,7 +1,5 @@
-+ Flechas rectas:
++ arrow_line:
 edge normal
-
-+ Fechas rectangulares:
 
 + start_end
 ellipse
@@ -15,7 +13,5 @@ parallelogram
 + process
 box
 
-+ decision (siempre saca dos flechas al mismo nivel)
++ decision
 diamond
-
-

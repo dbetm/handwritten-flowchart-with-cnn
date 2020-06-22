@@ -1,4 +1,5 @@
 import sys
+import os
 
 from graphviz import Digraph
 
@@ -32,7 +33,6 @@ class FlowchartGenerator(object):
         """Driver method for generate reconstructed flowchart image."""
 
         for i, key in enumerate(self.flow):
-
             node = self.flow[key]
             if(len(node) == 1):
                 cls = self.graph_nodes[key].get_class()
@@ -42,6 +42,7 @@ class FlowchartGenerator(object):
                 self.__build_node(cls, self.graph_nodes[key].get_text(), key)
                 # Find next shape to connect it
                 dest_cls, dest_key = self.__find_dest(node[0])
+
                 if(dest_cls != 'decision'):
                     self.__build_node(
                         dest_cls,
@@ -53,7 +54,7 @@ class FlowchartGenerator(object):
                     if (dest_key in self.added_nodes):
                         self.__add_edge(str(key), str(dest_key))
                     else:
-                        self.__add_subgraph(dest_cls, dest_key)
+                        self.__add_subgraph(dest_cls, dest_key, last_key=key)
             elif(len(node) == 2): #decision
                 arrow_text = self.graph_nodes[node[0]].get_text().lower()
                 if(arrow_text == 'si' or arrow_text == 'yes' or arrow_text == 'sí'):
@@ -136,38 +137,48 @@ class FlowchartGenerator(object):
             self.dot.edge(origin, dest, label=text)
 
 
+# Unit testing
 if __name__ == '__main__':
-    # Order (x1, x2, y1, y2)
-    # ------ TEST CASE 'Square area' ------
+    # ------ TEST CASE 'Sum 2 numbers' ------
     # Create text nodes
-    t0 = Node(coordinate=[689,1012,207,335], text='inicio')
-    t1 = Node(coordinate=[607,1284,658,787], text='x=0.0, res=0.0')
-    t2 = Node(coordinate=[764,881,1076,1169], text='x')
-    t3 = Node(coordinate=[576,1117,1430,1556], text='res=x*x')
-    t4 = Node(coordinate=[756,953,1928,2023], text='res')
-    t5 = Node(coordinate=[681,912,2448,2561], text='fin')
-
+    t0 = Node(coordinate=[569,855,110,242], text='inicio')
+    t1 = Node(coordinate=[352,1044,482,589], text='a=0, b=0, res=0')
+    t2 = Node(coordinate=[477,905,810,946], text='"Dame a: "')
+    t3 = Node(coordinate=[555,691,1267,1374], text='a')
+    t4 = Node(coordinate=[412,873,1571,1703], text='"Dame b: "')
+    t5 = Node(coordinate=[494,587,2103,2171], text='b')
+    t6 = Node(coordinate=[334,791,2424,2532], text='res = a+b')
+    t7 = Node(coordinate=[1234,1851,2375,2614], text='"Resultado es: " res')
+    t8 = Node(coordinate=[1298,1491,2928,3049], text='fin')
     # Create shape nodes
-    s0 = Node(coordinate=[553,1122,174,397], class_shape='start_end')
-    s1 = Node(coordinate=[776,858,376,630], class_shape='arrow_line_down')
-    s2 = Node(coordinate=[458,1392,592,846], class_shape='process')
-    s3 = Node(coordinate=[787,879,838,1038], class_shape='arrow_line_down')
-    s4 = Node(coordinate=[587,1048,1017,1202], class_shape='scan')
-    s5 = Node(coordinate=[774,879,1187,1356], class_shape='arrow_line_down')
-    s6 = Node(coordinate=[471,1212,1346,1641], class_shape='process')
-    s7 = Node(coordinate=[820,935,1597,1882], class_shape='arrow_line_down')
-    s8 = Node(coordinate=[610,1202,1853,2166], class_shape='print')
-    s9 = Node(coordinate=[792,884,2148,2402], class_shape='arrow_line_down')
-    s10 = Node(coordinate=[517,1128,2379,2661], class_shape='start_end')
+    s0 = Node(coordinate=[448,1012,57,253], class_shape='start_end')
+    s1 = Node(coordinate=[651,755,221,467], class_shape='arrow_line_down')
+    s2 = Node(coordinate=[262,1141,378,635], class_shape='process')
+    s3 = Node(coordinate=[626,730,603,778], class_shape='arrow_line_down')
+    s4 = Node(coordinate=[427,944,753,1089], class_shape='print')
+    s5 = Node(coordinate=[580,709,1053,1253], class_shape='arrow_line_down')
+    s6 = Node(coordinate=[373,869,1221,1407], class_shape='scan')
+    s7 = Node(coordinate=[569,651,1374,1564], class_shape='arrow_line_down')
+    s8 = Node(coordinate=[366,969,1510,1882], class_shape='print')
+    s9 = Node(coordinate=[494,601,1857,2085], class_shape='arrow_line_down')
+    s10 = Node(coordinate=[334,741,2046,2214], class_shape='scan')
+    s11 = Node(coordinate=[477,562,2175,2382], class_shape='arrow_line_down')
+    s12 = Node(coordinate=[248,873,2353,2574], class_shape='process')
+    s13 = Node(coordinate=[826,1216,2392,2507], class_shape='arrow_line_left')
+    s14 = Node(coordinate=[1187,1944,2307,2735], class_shape='print')
+    s15 = Node(coordinate=[1373,1491,2696,2917], class_shape='arrow_line_down')
+    s16 = Node(coordinate=[1169,1619,2878,3082], class_shape='start_end')
 
-    filename = 'square_area.dot'
+    filename = 'sum.dot'
     graph = Graph(
-        [t0, t1, t2, t3, t4, t5],
-        [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10]
+        image_path="",
+        text_nodes=[t0, t1, t2, t3, t4, t5, t6, t7, t8],
+        shape_nodes=[s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16]
     )
 
     flow = graph.generate_graph()
     #flow = aux_flow() # use when graph is not good constructed
     print(flow)
+
     flow_gen = FlowchartGenerator(graph, flow, filename=filename)
     flow_gen.generate_flowchart()

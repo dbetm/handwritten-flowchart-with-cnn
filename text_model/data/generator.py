@@ -11,6 +11,8 @@ import unicodedata
 import cv2
 import os
 source = "iam"
+new = "new_data"
+new_source_path = os.path.join("text_model","data_model",f"{new}.hdf5")
 source_path = os.path.join("text_model","data_model",f"{source}.hdf5")
 class DataGenerator():
     """Generator class with data streaming"""
@@ -23,10 +25,11 @@ class DataGenerator():
         self.steps = dict()
         self.index = dict()
         self.dataset = dict()
+        self.new_dataset = dict()
 
         if load_data:
             with h5py.File(source, "r") as f:
-                for pt in self.partitions:
+                for pt in self.partition:
                     self.dataset[pt] = dict()
 
                     self.dataset[pt]['dt'] = np.array(f[pt]['dt'])
@@ -48,7 +51,7 @@ class DataGenerator():
                 self.index[pt] = 0
     def load_data(self):
         with h5py.File(source_path, "r") as f:
-            for pt in self.partitions:
+            for pt in ['valid']:
                 self.dataset[pt] = dict()
 
                 self.dataset[pt]['dt'] = np.array(f[pt]['dt'])
@@ -60,7 +63,7 @@ class DataGenerator():
 
                 self.dataset[pt]['dt'] = self.dataset[pt]['dt'][randomize]
                 self.dataset[pt]['gt'] = self.dataset[pt]['gt'][randomize]
-        for pt in self.partitions:
+        for pt in ['valid']:
             # decode sentences from byte
             self.dataset[pt]['gt'] = [x.decode() for x in self.dataset[pt]['gt']]
 
@@ -68,6 +71,48 @@ class DataGenerator():
             self.size[pt] = len(self.dataset[pt]['gt'])
             self.steps[pt] = int(np.ceil(self.size[pt] / self.batch_size))
             self.index[pt] = 0
+        with h5py.File(new_source_path, "r") as f:
+                self.new_dataset['dt'] = np.array(f['dt'])
+                self.new_dataset['gt'] = np.array(f['gt'])
+
+                randomize = np.arange(len(self.new_dataset['gt']))
+                np.random.seed(42)
+                np.random.shuffle(randomize)
+
+                self.new_dataset['dt'] = self.new_dataset['dt'][randomize]
+                self.new_dataset['gt'] = self.new_dataset['gt'][randomize]
+        # decode sentences from byte
+        self.new_dataset['gt'] = [x.decode() for x in self.new_dataset['gt']]
+
+        # set size and setps
+        self.size['train'] = len(self.new_dataset['gt'])
+        self.steps['train'] = int(np.ceil(self.size['train'] / self.batch_size))
+        self.index['train'] = 0
+    def new_next_train_batch(self):
+        """Get the next batch from train partition (yield)"""
+        while True:
+            if self.index['train'] >= self.size['train']:
+                self.index['train'] = 0
+
+            index = self.index['train']
+            until = self.index['train'] + self.batch_size
+            self.index['train'] = until
+
+            x_train = self.new_dataset['dt'][index:until]
+            x_train = pp.augmentation(x_train,
+                                      rotation_range=1.5,
+                                      scale_range=0.05,
+                                      height_shift_range=0.025,
+                                      width_shift_range=0.05,
+                                      erode_range=5,
+                                      dilate_range=3)
+            x_train = pp.normalization(x_train)
+
+            y_train = [self.tokenizer.encode(y) for y in self.new_dataset['gt'][index:until]]
+            y_train = [np.pad(y, (0, self.tokenizer.maxlen - len(y))) for y in y_train]
+            y_train = np.asarray(y_train, dtype=np.int16)
+
+            yield (x_train, y_train)
     def next_train_batch(self):
         """Get the next batch from train partition (yield)"""
         while True:

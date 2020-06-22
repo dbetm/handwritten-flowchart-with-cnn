@@ -28,6 +28,7 @@ sys.path.append("model")
 import frcnn
 sys.path.append('..')
 from node import Node
+from preproccesor import Preprocessor
 
 class ShapeClassifier(object):
 	"""Shape Classifier, detects elements of handwritten flowchart using a pre-
@@ -82,6 +83,9 @@ class ShapeClassifier(object):
 		"""Perform object detection, in this case elements of flowchart and
 		draw bounding boxes and image and save the same."""
 
+		# Image preparation
+		image = Preprocessor.apply_unsharp_masking(image)
+
 		st = time.time() # start time
 		# Format input image
 		X, ratio = ImageTools.get_format_img_size(image, self.config)
@@ -122,6 +126,10 @@ class ShapeClassifier(object):
 	def predict(self, image, display_image):
 		"""Object detection for flowchart and generate nodes for shapes
 		and connectors."""
+
+		# Image preparation
+		image = Preprocessor.apply_unsharp_masking(image)
+		image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
 		# Format input image
 		X, ratio = ImageTools.get_format_img_size(image, self.config)
@@ -564,7 +572,7 @@ if __name__ == '__main__':
 	overlap_thresh_2 = 0.05
 	bbox_threshold = 0.45
 
-	img_path = "/home/david/Escritorio/set12/11.jpg"
+	img_path = "/home/david/Escritorio/set10/49.jpg"
 
 	# The best model is in folder 9 (training results)
 	classifier = ShapeClassifier(
@@ -576,6 +584,7 @@ if __name__ == '__main__':
 		num_rois=32
 	)
 	image = cv2.imread(img_path)
+<<<<<<< HEAD
 	nodes = classifier.predict(image, True)
 	print(*enumerate(nodes))"""
 

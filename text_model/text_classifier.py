@@ -44,7 +44,7 @@ class TextClassifier(object):
     def train_new_data(self):
         self.dtgen.load_data()
         callbacks = self.model.get_callbacks_continue(logdir=output_path, checkpoint=target_path, verbose=1)
-        self.model.fit(x=self.dtgen.next_train_batch(),
+        self.model.fit(x=self.dtgen.new_next_train_batch(),
               epochs=10,
               steps_per_epoch=self.dtgen.steps['train'],
               validation_data=self.dtgen.next_valid_batch(),

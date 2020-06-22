@@ -1,0 +1,17 @@
+digraph {
+	0 [label=inicio shape=ellipse]
+	2 [label="a=0, b=0, res=0" shape=box]
+	0 -> 2
+	4 [label="\"Dame a: \"" image="/home/david/Escritorio/handwritten-flowchart-with-cnn/flowchart_generator/assets/print.svg" shape=none]
+	2 -> 4
+	6 [label=a shape=parallelogram]
+	4 -> 6
+	8 [label="\"Dame b: \"" image="/home/david/Escritorio/handwritten-flowchart-with-cnn/flowchart_generator/assets/print.svg" shape=none]
+	6 -> 8
+	10 [label=b shape=parallelogram]
+	8 -> 10
+	12 [label="res = a+b" shape=box]
+	10 -> 12
+	16 [label=fin shape=ellipse]
+	12 -> 16
+}
