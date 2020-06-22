@@ -1,27 +1,36 @@
-from tkinter import *
-from tkinter import filedialog
-from tkinter import ttk
+# -*- coding: utf-8 -*-
+
+import os
+import copy
+
 import cv2
-"""
-Notes:
-For now the class have a instance of tkinter, but in the future will be the Handle instance
-"""
-class Preproccesor(object):
+import numpy as np
+
+
+class Preprocessor(object):
+    """Class Preprocessor with utils for image preprocessing."""
 
     def __init__(self):
-        image = None
-        image_path = None
-    def open_image(self):
-        root = Tk()
-        root.config(width=0, height=0)
-        root.filename = filedialog.askopenfilename(title = "Select file",filetypes = (("all files","*.*"),("jpeg files","*.jpg"),("png files","*.png")))
-        self.image_path = str(root.filename)
-        self.image = cv2.imread(self.image_path)
-        root.destroy()
-    def show_image(self):
-        cv2.imshow("image",self.image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-pre = Preproccesor()
-pre.open_image()
-pre.show_image()
+        super(Preprocessor, self).__init__()
+
+    @staticmethod
+    def to_gray_scale(image):
+        """Return the image in gray scales."""
+
+        # Converting color image to grayscale image
+        res = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        return res
+
+    @staticmethod
+    def apply_unsharp_masking(image):
+        """ Improve a bit the image for emphasize texture and details.
+        """
+
+        img = Preprocessor.to_gray_scale(image)
+
+        # Gaussian filtering
+        blur = cv2.GaussianBlur(img, (5,5), 0)
+        alpha = 1.5
+        beta = 1.0 - alpha
+        res = cv2.addWeighted(img, alpha, blur, beta, 0.0)
+        return res
