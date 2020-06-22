@@ -353,7 +353,7 @@ class HandlerGUI(object):
                 break
 
         print('Results will be stored in: ' + new_dir)
-        return "results_"+new_dir
+        return new_dir
 
     def recognize_flowchart_window(self):
         """ Recognize flowchart window.
@@ -415,7 +415,7 @@ class HandlerGUI(object):
         )
         button_predict.pack(pady=20)
     def __continue_process(self,text_nodes,shape_nodes,image_path,window):
-        if window:
+        if window != None:
             window.destroy()
             window.update()
         print(text_nodes,shape_nodes)

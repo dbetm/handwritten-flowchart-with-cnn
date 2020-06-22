@@ -137,7 +137,7 @@ class CodeGenerator(object):
                 #Call the function with the next node
                 self.generate(self.adj_list[index][0],end_x)
             elif(self.nodes[index].get_class() == "scan"):
-                self.lines_to_write.append(self.generate_tabs(self.pos_x)+'scanf("'+self.type_map[self.variables[self.nodes[index].get_text()]]+'",&'+self.nodes[index].get_text()+');\n')
+                self.lines_to_write.append(self.generate_tabs(self.pos_x)+'scanf('+self.type_map[self.variables[self.nodes[index].get_text()]]+',&'+self.nodes[index].get_text()+');\n')
                 self.generate(self.adj_list[index][0],end_x)
             elif(self.nodes[index].get_class() == "print"):
                 #change the form to get tthe type

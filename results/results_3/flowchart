@@ -1,0 +1,7 @@
+digraph {
+	0 [label=Inicio shape=ellipse]
+	4 [label="\"Hola mundo\"" shape=invhouse]
+	0 -> 4
+	1 [label=Fin shape=ellipse]
+	4 -> 1
+}

@@ -1,0 +1,20 @@
+digraph {
+	0 [label="\"n\"" shape=invhouse]
+	5 [label=Fin shape=ellipse]
+	0 -> 5
+	1 [label="\"F\"" shape=invhouse]
+	1 -> 5
+	2 -> 0 [label="Sí"]
+	4 [label=inicio shape=ellipse]
+	11 [label="n=o" shape=box]
+	4 -> 11
+	12 [label=n shape=parallelogram]
+	11 -> 12
+	12 -> 2
+	2 -> 1 [label=No]
+	{
+		rank=same
+		2 [label="n==0" shape=diamond]
+		1 [label="\"F\"" shape=invhouse]
+	}
+}
