@@ -5,7 +5,6 @@ class CodeGenerator(object):
     def __init__(self,graph,file_path):
         self.FILE_PATH = "results/"+file_path+"code.c"
         self.adj_list = graph.get_adyacency_list()
-        print("adjacency_list = ",self.adj_list)
         self.nodes = graph.get_nodes()
         self.pos_x = 0
         #ponter list to know how tabs need to white
@@ -13,9 +12,8 @@ class CodeGenerator(object):
         self.lines_to_write = []
         self.variables = dict()
         self.type_map = {"int":'"%d"',"double":'"%f"',"char":'"%c"'}
-        self.collapse_end_node()
-        print("adjacency_list 2= ",self.adj_list)
-    def collapse_end_node(self):
+        self.__collapse_end_node()
+    def __collapse_end_node(self):
         cont = 0
         end_node = None
         nodes_list = []
@@ -32,11 +30,11 @@ class CodeGenerator(object):
                         if self.adj_list[i][y] == x:
                             self.adj_list[i][y] = end_node
 
-    def is_any_arrow(self,node):
+    def __is_any_arrow(self,node):
         return node.get_class().split('_')[0] == "arrow"
-    def generate_tabs(self,pos_x):
+    def __generate_tabs(self,pos_x):
         return "    "*pos_x
-    def get_type(self,sentence):
+    def __get_type(self,sentence):
         sentence = sentence.replace(" ", "")
         if sentence in self.variables.keys():
             return self.type_map[self.variables[sentence]]
@@ -83,7 +81,7 @@ class CodeGenerator(object):
                         return ""
 
             return self.type_map[max_data]
-    def predict_type(self,sentence):
+    def __predict_type(self,sentence):
         sentence = sentence.replace(" ", "")
         def type_variable(s):
             if(len(s) == 1 and s.isalpha()):
@@ -125,26 +123,25 @@ class CodeGenerator(object):
         #Call the function with the next node
         self.generate(self.adj_list[index][0],end_x)
     def generate(self,index,end_x):
-        print("arribaaa",index,end_x)
         if(end_x != index):
             #Is is a arrow
-            if(self.is_any_arrow(self.nodes[index])):
+            if(self.__is_any_arrow(self.nodes[index])):
                 #Call the function with the next node
                 self.generate(self.adj_list[index][0],end_x)
             #If is a process node
             elif(self.nodes[index].get_class() == "process"):
-                self.lines_to_write.append(self.generate_tabs(self.pos_x)+self.predict_type(self.nodes[index].get_text())+";\n")
+                self.lines_to_write.append(self.__generate_tabs(self.pos_x)+self.__predict_type(self.nodes[index].get_text())+";\n")
                 #Call the function with the next node
                 self.generate(self.adj_list[index][0],end_x)
             elif(self.nodes[index].get_class() == "scan"):
-                self.lines_to_write.append(self.generate_tabs(self.pos_x)+'scanf('+self.type_map[self.variables[self.nodes[index].get_text()]]+',&'+self.nodes[index].get_text()+');\n')
+                self.lines_to_write.append(self.__generate_tabs(self.pos_x)+'scanf('+self.type_map[self.variables[self.nodes[index].get_text()]]+',&'+self.nodes[index].get_text()+');\n')
                 self.generate(self.adj_list[index][0],end_x)
             elif(self.nodes[index].get_class() == "print"):
                 #change the form to get tthe type
-                self.lines_to_write.append(self.generate_tabs(self.pos_x)+'printf('+self.get_type(self.nodes[index].get_text())+','+ self.nodes[index].get_text() +');\n')
+                self.lines_to_write.append(self.__generate_tabs(self.pos_x)+'printf('+self.__get_type(self.nodes[index].get_text())+','+ self.nodes[index].get_text() +');\n')
                 self.generate(self.adj_list[index][0],end_x)
             elif(self.nodes[index].get_class() == "start_end" and self.nodes[index].get_text()):
-                self.lines_to_write.append(self.generate_tabs(self.pos_x)+"return 0;\n");
+                self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"return 0;\n");
                 self.lines_to_write.append("}\n");
 
                 f = open(self.FILE_PATH, "a+")
@@ -169,7 +166,7 @@ class CodeGenerator(object):
                 visited_list = [0]*len(self.nodes)
                 if(ans == None):
                     #it is a if
-                    self.lines_to_write.append(self.generate_tabs(self.pos_x)+"if("+self.nodes[index].get_text()+"){\n")
+                    self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"if("+self.nodes[index].get_text()+"){\n")
                     self.pos_x += 1
                     def dfs2(v,visited):
                         visited[v] = 1
@@ -188,8 +185,6 @@ class CodeGenerator(object):
                     yes_visited = dfs2(self.adj_list[index][yes_path],[0]*len(self.nodes))
                     no_visited = dfs2(self.adj_list[index][no_path],[0]*len(self.nodes))
                     stop = -1
-                    print(yes_visited)
-                    print(no_visited)
                     for i in range(len(yes_visited)):
                         if(yes_visited[i] == 1 and no_visited[i] == 1):
                             stop = i
@@ -197,16 +192,15 @@ class CodeGenerator(object):
 
                     self.generate(self.adj_list[index][yes_path],stop)
                     self.pos_x -= 1
-                    self.lines_to_write.append(self.generate_tabs(self.pos_x)+"}\n")
-                    self.lines_to_write.append(self.generate_tabs(self.pos_x)+"else{\n")
+                    self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"}\n")
+                    self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"else{\n")
                     self.pos_x += 1
                     self.generate(self.adj_list[index][no_path],stop)
                     self.pos_x -= 1
-                    self.lines_to_write.append(self.generate_tabs(self.pos_x)+"}\n")
+                    self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"}\n")
                     self.generate(stop,-1)
                 elif(ans[0] == True):
-                    print("Entreeeeee")
-                    self.lines_to_write.append(self.generate_tabs(self.pos_x)+"while("+self.nodes[index].get_text()+"){\n")
+                    self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"while("+self.nodes[index].get_text()+"){\n")
                     self.pos_x += 1
                     end = ans[1]
                     start = -1
@@ -215,9 +209,8 @@ class CodeGenerator(object):
                             start = self.adj_list[index].index(i)
                     self.generate(self.adj_list[index][start],end)
                     self.pos_x -= 1
-                    self.lines_to_write.append(self.generate_tabs(self.pos_x)+"}\n")
+                    self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"}\n")
                     for i in self.adj_list[index]:
                         if(self.nodes[i].get_text().lower() == "no"):
                             start = self.adj_list[index].index(i)
-                    print("Voy a iniciar chingao")
                     self.generate(self.adj_list[index][start],-1)

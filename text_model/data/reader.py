@@ -108,7 +108,6 @@ class Dataset():
             hf.create_dataset(f"{i}/gt", data=dataset[i]['gt'], compression="gzip", compression_opts=9)
         hf.close()
     def save_new_data(self,images,words):
-        print("##### Save new data ##########")
         dataset = dict()
         dataset = dict()
         dataset = {"dt": [], "gt": []}
@@ -125,7 +124,6 @@ class Dataset():
         hf.create_dataset("/gt", data=dataset['gt'], compression="gzip", compression_opts=9)
         hf.close()
         dataset.clear()
-        print("##### Save new data ##########")
     @staticmethod
     def check_text(text):
         """Make sure text has more characters instead of punctuation marks"""

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 class Node(object):
     """Node represents a simple element of the flowchart."""
 
@@ -38,7 +36,6 @@ class Node(object):
     def set_class(self,class_shape):
         self.class_shape = class_shape
 
-    #Change in the class diagram
     def get_type(self):
         """Return type of node (None, text, shape or connector)."""
 
@@ -60,4 +57,3 @@ class Node(object):
 
     def __repr__(self):
         return "Node(class:"+str(self.class_shape)+",text:"+str(self.text)+")"
-        #return "Node(coord:"+str(self.coordinate)+",class:"+str(self.class_shape)+",text:"+str(self.text)+")"

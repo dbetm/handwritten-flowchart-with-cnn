@@ -151,7 +151,6 @@ class HTRModel:
 
         :param optimizer: optimizer for training
         """
-
         # define inputs, outputs and optimizer of the chosen architecture
         inputs, outputs = self.architecture(self.input_size, self.vocab_size + 1)
         optimizer = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
