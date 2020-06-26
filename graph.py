@@ -4,20 +4,14 @@ from node import Node
 
 class Graph(object):
 
-    def __init__(self,image_path,text_nodes,shape_nodes):
-        self.image_path = image_path
-        self.__set_image(image_path)
+    def __init__(self,text_nodes,shape_nodes):
         self.text_nodes = text_nodes
         self.shape_nodes = shape_nodes
+        print("texto",self.text_nodes)
+        print("shape",self.shape_nodes)
         self.nodes = None
         self.adj_list = None
         self.visited_list = None
-    def __set_image(self,image_path):
-        image = cv2.imread(image_path,0)
-        blur = cv2.GaussianBlur(image,(5,5),0)
-        ret3,image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        image = (255 - image)
-        return image
     def __exist_character(self,cordA,cordB):
         image = self.image
         xmin_A,xmax_A,ymin_A,ymax_A = cordA
@@ -241,6 +235,7 @@ class Graph(object):
         if(self.__find_next(first_state) == "NV"):
             print(self.adj_list)
             return "Not valid"
+        print("adj_list",self.adj_list)
         return self.adj_list
 
     def get_adyacency_list(self):

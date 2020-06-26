@@ -419,7 +419,7 @@ class HandlerGUI(object):
             window.destroy()
             window.update()
         print(text_nodes,shape_nodes)
-        graph = Graph(image_path,text_nodes,shape_nodes)
+        graph = Graph(text_nodes,shape_nodes)
         flow = graph.generate_graph()
         #call function to traslate to code and flowchart
         results_path = self.__get_results_path()
@@ -458,10 +458,10 @@ class HandlerGUI(object):
         title.pack(pady = 5)
         window.pack_propagate(False)
         window.config(width="400", height="200",bg="#943340")
-        train_now = tk.Button(window,text="Train model now",font=("Arial",15),
+        train_now = tk.Button(window,text="Train text model now",font=("Arial",15),
         background="green",command = lambda:self.__train_now(images,new_texts,text_nodes,shape_nodes,image_path,window))
         train_now.pack(pady = 10)
-        train_after = tk.Button(window,text="Train model later",font=("Arial",15),
+        train_after = tk.Button(window,text="Train text model later",font=("Arial",15),
         background="green",command = lambda:self.__continue_process(text_nodes,shape_nodes,image_path,window))
         train_after.pack(pady = 10)
     def edit_text(self,text_nodes,shape_nodes,image_path,window):
@@ -520,7 +520,8 @@ class HandlerGUI(object):
             bbox_threshold=0.51,
             overlap_thresh_1=0.9,
             overlap_thresh_2=0.2)
-            shape_nodes = sc.predict(image,display_image=False)
+            shape_nodes = sc.predict(image,display_image=True)
+            print("shape_nodes",shape_nodes)
             #build the graph
             self.tc = TextClassifier()
             text_nodes = self.tc.recognize(image_path)

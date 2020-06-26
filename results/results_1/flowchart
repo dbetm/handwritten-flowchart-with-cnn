@@ -14,7 +14,7 @@ digraph {
 	2 -> 1 [label=No]
 	{
 		rank=same
-		2 [label="n==0" shape=diamond]
+		2 [label="n == 0" shape=diamond]
 		1 [label="\"F\"" shape=invhouse]
 	}
 }
