@@ -53,7 +53,7 @@ class HandlerGUI(object):
         self.RESULTS_PATH = "results/"
         self.master = master
         ##Init of the master view
-        self.master.title("Handwritten flowchart with cnn")
+        self.master.title("Handwritten flowchart with CNNs")
         self.master.configure(background="gray99")
         self.master.resizable(False,False)
         self.master.geometry("600x500")
@@ -121,7 +121,7 @@ class HandlerGUI(object):
 
         window = tk.Toplevel(self.master)
         window.pack_propagate(False)
-        window.title("Train model")
+        window.title("Train shape model")
         window.config(width="700", height="600",bg="#943340")
         title = tk.Label(window,font = ("Arial",50),text="Train model",bg="#943340")
         title.pack()
