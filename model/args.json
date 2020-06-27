@@ -1,1 +1,1 @@
-{"dataset": "/home/david/Escritorio/flowchart-3b(splitter)", "rois": 32, "input_weight_path": null, "epochs": 5, "learning_rate": null, "gpu": false}
+{"dataset": "/home/david/Escritorio/flowchart_3b_v3.1", "rois": 32, "input_weight_path": "/home/david/Escritorio/handwritten-flowchart-with-cnn/model/vgg16_weights_tf_dim_ordering_tf_kernels.h5", "epochs": 3, "learning_rate": 1e-05, "gpu": false}

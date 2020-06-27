@@ -123,7 +123,7 @@ class HandlerGUI(object):
         window.pack_propagate(False)
         window.title("Train shape model")
         window.config(width="700", height="600",bg="#943340")
-        title = tk.Label(window,font = ("Arial",50),text="Train model",bg="#943340")
+        title = tk.Label(window,font = ("Arial",50),text="Train shape model",bg="#943340")
         title.pack()
         large_font = ('Arial',15)
         text_font = ('Arial',12)
