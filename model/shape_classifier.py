@@ -28,7 +28,7 @@ sys.path.append("model")
 import frcnn
 sys.path.append('..')
 from node import Node
-from preproccesor import Preprocessor
+from preprocessor import Preprocessor
 
 class ShapeClassifier(object):
 	"""Shape Classifier, detects elements of handwritten flowchart using a pre-
