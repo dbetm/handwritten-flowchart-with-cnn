@@ -75,7 +75,7 @@ class FlowchartGenerator(object):
                         )
 
         # Render flowchart image
-        self.dot.render(view='true')
+        self.dot.render(view='false')
 
     def __is_any_arrow(self, _class):
         return _class.split('_')[0] == "arrow"
