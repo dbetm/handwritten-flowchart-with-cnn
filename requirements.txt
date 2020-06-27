@@ -26,17 +26,20 @@ imagecodecs==2020.2.18
 imageio==2.8.0
 imgaug==0.4.0
 importlib-metadata==1.6.0
+imutils==0.5.3
 joblib==0.14.1
 Keras==2.3.1
 Keras-Applications==1.0.8
 keras-ocr==0.8.3
 Keras-Preprocessing==1.1.0
 kiwisolver==1.2.0
+llvmlite==0.32.1
 Mako==1.1.0
 Markdown==3.2.2
 MarkupSafe==1.1.1
 matplotlib==3.2.1
 networkx==2.4
+numba==0.47.0
 numpy==1.18.1
 oauthlib==3.0.1
 olefile==0.46
@@ -49,6 +52,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.7
 pyclipper==1.1.0.post3
 pycparser==2.20
+pydot==1.4.1
 pygpu==0.7.6
 PyJWT==1.7.1
 pyOpenSSL==19.1.0
@@ -80,4 +84,3 @@ validators==0.15.0
 Werkzeug==1.0.1
 wrapt==1.12.1
 zipp==3.1.0
-
