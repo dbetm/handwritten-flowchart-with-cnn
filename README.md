@@ -8,7 +8,7 @@ In order to augment text detector precision the technique called continual learn
 
 Finally, like output is generated source code in C and its compilation output, and the reconstructed diagram in image digital.
 
-Note: The flowcharts used for testing are constructed with a defined set of shapes and connectors. You can see [here]().
+Note: The flowcharts used for testing are constructed with a defined set of shapes and connectors. You can see [here](https://github.com/dbetm/handwritten-flowchart-with-cnn/tree/master/model/set_shapes.png).
 
 ## How to set up for testing detections
 1. Create a virtual enviroment with Conda with name 'tt', the list of requirements is [here](https://github.com/dbetm/handwritten-flowchart-with-cnn/blob/master/requirements.txt).
