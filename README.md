@@ -17,10 +17,10 @@ Note: The flowcharts used for testing are constructed with a defined set of shap
     - Download the folder [here](https://drive.google.com/drive/folders/1Pax_lIypAP5qYj-oDi1fFL0COUnjLe0l?usp=sharing).
     - Paste it (unzipped) into model/training_results/ (path inside the repo)
 4. Pre-trained model for text.
-    - 
+    - (pending)
 
 ## Usage
 1. Activate your Conda enviroment.
 2. Change terminal to repository folder.
 3. Type: ```$ python3 handler.py ```
-4. Use option "Recognize flowchart" for testing detections with handwritten flowcharts.
+4. Use "Recognize flowchart" option for testing detections with handwritten flowcharts.
