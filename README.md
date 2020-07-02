@@ -24,3 +24,14 @@ Note: The flowcharts used for testing are constructed with a defined set of shap
 2. Change terminal to repository folder.
 3. Type: ```$ python3 handler.py ```
 4. Use "Recognize flowchart" option for testing detections with handwritten flowcharts.
+
+### Some examples of the results
+![example 1](https://github.com/dbetm/handwritten-flowchart-with-cnn/blob/master/Images/some_results/fibo.png "Fibonacci sequence")
+
+Calculate the nth term of the Fibonacci sequence, compilation output: None.
+
+![example 2](https://github.com/dbetm/handwritten-flowchart-with-cnn/blob/master/Images/some_results/hello_world.png "Hello world")
+
+Hello world, compilation output: None.
+
+
