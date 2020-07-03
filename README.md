@@ -17,8 +17,8 @@ Note: The flowcharts used for testing are constructed with a defined set of shap
     - Download the folder [here](https://drive.google.com/drive/folders/1Pax_lIypAP5qYj-oDi1fFL0COUnjLe0l?usp=sharing).
     - Paste it (unzipped) into model/training_results/ (path inside the repo)
 4. Pre-trained model for text.
-    - [IAM dataset .hdf5 here](https://drive.google.com/file/d/1gOb-bL52leremC7_OTN-qcpcwWW0ut3d/view?usp=sharing)
-    - [Pre-trained here](https://drive.google.com/file/d/1JikohW11j74PhV-FhtvTY7XorLCFUWhN/view?usp=sharing)
+    - IAM dataset [here](https://drive.google.com/file/d/1gOb-bL52leremC7_OTN-qcpcwWW0ut3d/view?usp=sharing)
+    - Pre-trained model[here](https://drive.google.com/file/d/1JikohW11j74PhV-FhtvTY7XorLCFUWhN/view?usp=sharing)
 
 ## Usage
 1. Activate your Conda enviroment.
