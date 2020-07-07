@@ -13,12 +13,15 @@ Note: The flowcharts used for testing are constructed with a defined set of shap
 ## How to set up for testing detections
 1. Create a virtual enviroment with Conda with name 'tt', the list of requirements is [here](https://github.com/dbetm/handwritten-flowchart-with-cnn/blob/master/requirements.txt).
 2. Download this repo.
-3.  model for shapes and connectors:
+3. Model for shapes and connectors:
     - Download the folder [here](https://drive.google.com/drive/folders/1Pax_lIypAP5qYj-oDi1fFL0COUnjLe0l?usp=sharing).
     - Paste it (unzipped) into model/training_results/ (path inside the repo)
-4. Pre-trained model for text.
-    - IAM dataset [here](https://drive.google.com/file/d/1gOb-bL52leremC7_OTN-qcpcwWW0ut3d/view?usp=sharing)
-    - Pre-trained model[here](https://drive.google.com/file/d/1JikohW11j74PhV-FhtvTY7XorLCFUWhN/view?usp=sharing)
+4. For text.
+    - Download IAM dataset [here](https://drive.google.com/file/d/1gOb-bL52leremC7_OTN-qcpcwWW0ut3d/view?usp=sharing)
+        - Inside text_model create a folder with name: 'data_model'.
+        - iam.hdf5 (94.1 MB) paste into text_model/data_model/
+    - Download trained model [here](https://drive.google.com/file/d/1JikohW11j74PhV-FhtvTY7XorLCFUWhN/view?usp=sharing)
+        - checkpoint_weights.hdf5 (38.5 MB) paste into text_model/output/iam/puigcerver/
 
 ## Usage
 1. Activate your Conda enviroment.
