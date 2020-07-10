@@ -74,6 +74,12 @@ class HTRModel:
                 self.compile()
 
             self.model.load_weights(target)
+    """EarlyStopping(
+        monitor=monitor,
+        min_delta=1e-8,
+        patience=0,
+        restore_best_weights=True,
+        verbose=verbose),"""
     def get_callbacks_continue(self, logdir, checkpoint, monitor="val_loss", verbose=0):
         callbacks = [
             CSVLogger(
@@ -92,12 +98,6 @@ class HTRModel:
                 monitor=monitor,
                 save_best_only=True,
                 save_weights_only=True,
-                verbose=verbose),
-            EarlyStopping(
-                monitor=monitor,
-                min_delta=1e-8,
-                patience=0,
-                restore_best_weights=True,
                 verbose=verbose),
             ReduceLROnPlateau(
                 monitor=monitor,

@@ -7,8 +7,6 @@ class Graph(object):
     def __init__(self,text_nodes,shape_nodes):
         self.text_nodes = text_nodes
         self.shape_nodes = shape_nodes
-        print("texto",self.text_nodes)
-        print("shape",self.shape_nodes)
         self.nodes = None
         self.adj_list = None
         self.visited_list = None
@@ -227,6 +225,7 @@ class Graph(object):
         *Check the cases arrow-rectangle/arrow line.
         """
         self.nodes = self.__collapse_nodes()
+        print("nodes",list(enumerate(self.nodes)))
         self.adj_list = {key: [] for key in range(len(self.nodes))}
         self.visited_list = [0]*len(self.nodes)
         first_state = self.find_first_state()

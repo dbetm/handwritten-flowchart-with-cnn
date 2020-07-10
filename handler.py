@@ -84,7 +84,6 @@ class HandlerGUI(object):
         self.master.mainloop()
 
     def start_train_action(self,args):
-        print(args)
         if(self.__validate_train_inputs(args)):
             dataset_path = args[0]
             rois = None if args[1] == '' else int(args[1])
@@ -92,7 +91,6 @@ class HandlerGUI(object):
             epochs = None if args[3] == '' else int(args[3])
             lr = None if args[4] == '' else float(args[4])
             use_gpu = True if args[5] == 1 else False
-            print(dataset_path, rois, weights_input, epochs, lr, use_gpu)
 
             cmd = 'source ~/anaconda3/etc/profile.d/conda.sh && conda activate ' + self.env_name
             cmd += ' && cd model/ && python3 shape_model.py; exec bash'
@@ -418,7 +416,6 @@ class HandlerGUI(object):
         if window != None:
             window.destroy()
             window.update()
-        print(text_nodes,shape_nodes)
         graph = Graph(text_nodes,shape_nodes)
         flow = graph.generate_graph()
         #call function to traslate to code and flowchart
@@ -446,7 +443,6 @@ class HandlerGUI(object):
     def __train_or_show(self,new_texts,text_nodes,shape_nodes,image_path,images,window):
         window.destroy()
         window.update()
-        print(new_texts,text_nodes)
         for node,text in zip(text_nodes,new_texts):
             node.set_text(text)
         window = tk.Toplevel(self.master)
@@ -507,8 +503,6 @@ class HandlerGUI(object):
             image_path = args[1]
             use_gpu = True if args[2] else False
             num_rois = 32 if args[3] == 'Type number of RoIs' else int(args[3])
-
-            print("------------------",model, image_path, use_gpu, num_rois)
             #Get the image
             image = cv2.imread(image_path)
             #Text segmentation(areas)
@@ -521,7 +515,6 @@ class HandlerGUI(object):
             overlap_thresh_1=0.9,
             overlap_thresh_2=0.2)
             shape_nodes = sc.predict(image,display_image=True)
-            print("shape_nodes",shape_nodes)
             #build the graph
             self.tc = TextClassifier()
             text_nodes = self.tc.recognize(image_path)
@@ -570,4 +563,4 @@ class HandlerGUI(object):
 
 root = tk.Tk()
 # hf is the name of the Conda environment
-my_gui = HandlerGUI(root, "hf")
+my_gui = HandlerGUI(root, "tt")

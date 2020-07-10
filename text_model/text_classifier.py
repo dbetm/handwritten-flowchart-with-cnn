@@ -45,7 +45,7 @@ class TextClassifier(object):
         self.dtgen.load_data()
         callbacks = self.model.get_callbacks_continue(logdir=output_path, checkpoint=target_path, verbose=1)
         self.model.fit(x=self.dtgen.new_next_train_batch(),
-              epochs=10,
+              epochs=1,
               steps_per_epoch=self.dtgen.steps['train'],
               validation_data=self.dtgen.next_valid_batch(),
               validation_steps=self.dtgen.steps['valid'],
@@ -110,7 +110,7 @@ class TextClassifier(object):
         if len(to_delate) > 0:
             for x in to_delate:
                 text_nodes.remove(x)
-        EXPAND_MAX = 20
+        EXPAND_MAX = 10
         res = []
         for i in text_nodes:
             xmin,xmax,ymin,ymax = i
@@ -187,14 +187,14 @@ class TextClassifier(object):
             results.append(list(map(ceil,[max(ys),min(ys),max(xs),min(xs)])))
         return results,texts
     def draw_boxes(self,image_path,boxes):
-        print("Entreee")
         image = cv2.imread(image_path)
         for box in boxes:
             xmin,xmax,ymin,ymax = box
             pts = np.array([[xmin,ymin], [xmax,ymin],[xmax,ymax],[xmin,ymax]], np.int32)
             cv2.polylines(img=image,pts=np.int32([pts]),color=(255, 0, 0),thickness=5,isClosed=True)
-        cv2.imshow("image",cv2.resize(image,(0, 0),fx = 0.5, fy = 0.5))
+        cv2.imshow("image",cv2.resize(image,(0, 0),fx = 0.3, fy = 0.3))
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
     def __image_generator(self,image):
         x_predict = pp.resize_new_data(image,input_size[:2])
         x_predict = np.array([x_predict])
@@ -210,7 +210,7 @@ class TextClassifier(object):
             y2,y1,x2,x1 = box
             coords.append([x1,x2,y1,y2])
         coords = self.__merge_text_nodes(image_path,coords)
-        #self.draw_boxes(image_path,coords)
+        self.draw_boxes(image_path,coords)
         for box in coords:
             xmin,xmax,ymin,ymax = box
             crop_img = self.image[ymin:ymax, xmin:xmax]

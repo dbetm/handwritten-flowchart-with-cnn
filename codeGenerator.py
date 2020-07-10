@@ -160,7 +160,7 @@ class CodeGenerator(object):
 
                 yes_way = -1
                 for i in self.adj_list[index]:
-                    if(self.nodes[i].get_text().lower() == "si"):
+                    if(self.nodes[i].get_text().lower() == "si" or self.nodes[i].get_text().lower() == "yes"):
                         yes_way = self.adj_list[index].index(i)
                 ans = dfs(self.adj_list[index][yes_way],index)
                 visited_list = [0]*len(self.nodes)
@@ -177,7 +177,7 @@ class CodeGenerator(object):
                     yes_path = -1
                     no_path = -1
                     for i in self.adj_list[index]:
-                        if(self.nodes[i].get_text() == "si"):
+                        if(self.nodes[i].get_text().lower() == "si" or self.nodes[i].get_text().lower() == "yes"):
                             yes_path = self.adj_list[index].index(i)
                     for i in self.adj_list[index]:
                         if(self.nodes[i].get_text() == "no"):
@@ -202,10 +202,11 @@ class CodeGenerator(object):
                 elif(ans[0] == True):
                     self.lines_to_write.append(self.__generate_tabs(self.pos_x)+"while("+self.nodes[index].get_text()+"){\n")
                     self.pos_x += 1
-                    end = ans[1]
+                    end = index
+                    print("endd",end)
                     start = -1
                     for i in self.adj_list[index]:
-                        if(self.nodes[i].get_text() == "si"):
+                        if(self.nodes[i].get_text().lower() == "si" or self.nodes[i].get_text().lower() == "yes"):
                             start = self.adj_list[index].index(i)
                     self.generate(self.adj_list[index][start],end)
                     self.pos_x -= 1
