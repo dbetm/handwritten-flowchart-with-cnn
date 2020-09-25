@@ -72,7 +72,7 @@ scipy==1.4.1
 Shapely==1.7.0
 six==1.14.0
 tensorboard==2.1.1
-tensorflow==2.1.0
+tensorflow==2.1.2
 tensorflow-estimator==2.1.0
 termcolor==1.1.0
 Theano==1.0.4
