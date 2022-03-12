@@ -46,7 +46,7 @@ olefile==0.46
 opencv-python==4.2.0.34
 opt-einsum==0+untagged.56.g2664021.dirty
 pandas==1.0.3
-Pillow==7.1.2
+Pillow==9.0.1
 protobuf==3.11.4
 pyasn1==0.4.8
 pyasn1-modules==0.2.7
