@@ -54,7 +54,7 @@ pyclipper==1.1.0.post3
 pycparser==2.20
 pydot==1.4.1
 pygpu==0.7.6
-PyJWT==1.7.1
+PyJWT==2.4.0
 pyOpenSSL==19.1.0
 pyparsing==2.4.7
 PySocks==1.7.1
