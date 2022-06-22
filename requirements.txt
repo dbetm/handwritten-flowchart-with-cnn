@@ -40,7 +40,7 @@ MarkupSafe==1.1.1
 matplotlib==3.2.1
 networkx==2.4
 numba==0.47.0
-numpy==1.18.1
+numpy==1.22.0
 oauthlib==3.0.1
 olefile==0.46
 opencv-python==4.2.0.34
