@@ -15,13 +15,13 @@ Note: Flowcharts used for testing are constructed with a defined shape set and c
 2. Acivate the new env and install the requirements: `$ pip install -r requirements.txt`
 2. Download / clone this repo.
 3. Shapes-connectors model:
-    - Download the folder [here](https://drive.google.com/drive/folders/1Pax_lIypAP5qYj-oDi1fFL0COUnjLe0l?usp=sharing).
+    - Download the folder from [here](https://drive.google.com/drive/folders/1Pax_lIypAP5qYj-oDi1fFL0COUnjLe0l?usp=sharing).
     - Paste it (unzipped) into `model/training_results/` (path inside the repo), so must be `model/training_results/9`
 4. Text model:
-    - Download IAM dataset [here](https://drive.google.com/file/d/1gOb-bL52leremC7_OTN-qcpcwWW0ut3d/view?usp=sharing)
+    - Download IAM dataset from [here](https://drive.google.com/file/d/1gOb-bL52leremC7_OTN-qcpcwWW0ut3d/view?usp=sharing)
         - Inside `text_model`, please create a folder with name 'data_model'.
         - `iam.hdf5` (94.1 MB) paste into `text_model/data_model/`
-    - Download pre-trained model [here](https://drive.google.com/file/d/1JikohW11j74PhV-FhtvTY7XorLCFUWhN/view?usp=sharing)
+    - Download pre-trained model from [here](https://drive.google.com/file/d/1JikohW11j74PhV-FhtvTY7XorLCFUWhN/view?usp=sharing)
         - `checkpoint_weights.hdf5` (38.5 MB) paste into `text_model/output/iam/puigcerver/`
 
 ## Usage
