@@ -2,16 +2,17 @@
 Recognition of handwritten flowcharts using convolutional neural networks to generate C source code and reconstructed digital flowchart.
 
 ## Overview
-The pipeline implemented in order to solve the problem of recognition of handwritten flowcharts uses image preprocessing, the input image is sending to two detectors, the shape-connector detector and to the text detector. For text flow, the image is binarize and it uses [Keras OCR](https://pypi.org/project/keras-ocr/) for locate text and an implemented model with CNN + LSTM for character classifing; moreover, on the flow for shapes and connectors it uses unsharp masking and a model that is called [Faster R-CNN](https://arxiv.org/abs/1506.01497) with backbone VGG-16. 
+The pipeline implemented in order to solve the problem of recognition of handwritten flowcharts uses image preprocessing, the input image is sending to two detectors, the shape-connector detector and the text detector. For text flow, the image is binarize and it uses [Keras OCR](https://pypi.org/project/keras-ocr/) for locate text and an implemented model with CNN + LSTM for character classifing; moreover, on the flow for shapes and connectors it uses unsharp masking and a model that is called [Faster R-CNN](https://arxiv.org/abs/1506.01497) with backbone VGG-16. 
 
-In order to augment the precision of the text detector, the technique called continual learning is used. After, some training with the text style of a certain user, the model will improve the text recognition.
+In order to augment the precision of the text detector, the technique called continual learning is used. After, some training with the text style of a specific user, the model will improve the text recognition.
 
-Finally, the outputs are the generated source code in C, its compilation output and the digital reconstructed diagram (image format).
+Finally, the outputs are the generated source code in C, its compilation output and the digital reconstructed diagram as an image.
 
 Note: Flowcharts used for testing are constructed with a defined shape set and connectors. You can see [here](https://github.com/dbetm/handwritten-flowchart-with-cnn/tree/master/model/set_shapes.png).
 
 ## How to set up for testing detections
-1. Create a virtual enviroment with Conda with name 'tt', the requirement list is [here](https://github.com/dbetm/handwritten-flowchart-with-cnn/blob/master/requirements.txt).
+1. Create a virtual environment with Conda with name 'hf'.
+2. Acivate the new env and install the requirements: `$ pip install -r requirements.txt`
 2. Download / clone this repo.
 3. Shapes-connectors model:
     - Download the folder [here](https://drive.google.com/drive/folders/1Pax_lIypAP5qYj-oDi1fFL0COUnjLe0l?usp=sharing).
@@ -38,8 +39,11 @@ Calculate the nth term of the Fibonacci sequence, compilation output: None.
 
 Hello world, compilation output: None.
 
+## Paper
+A paper was written in 2022 and published on International Journal of Computer Applications, you can find here: [Recognition of Handwritten Flowcharts using Convolutional Neural Networks](https://www.ijcaonline.org/archives/volume184/number1/32301-2022921969)
+
 ## Extra
-Would you like to [download](https://www.kaggle.com/davbetm/flowchart-3b) the dataset? 
+Would you like to download the dataset? [Link](https://www.kaggle.com/davbetm/flowchart-3b)
 
 Please cite with:
 
