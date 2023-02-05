@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-""" Copy this file inside the folder of the results and exec...
-"""
+""" Copy this file inside the folder of the results and exec..."""
 
 import pickle
 

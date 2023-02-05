@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""
-Shape model module contains a class to manage the model for shapes and connectors
+"""Shape model module contains a class to manage the model for shapes and connectors
 recognition, allows train an architecture that use CNNs and measure the same.
 """
 
