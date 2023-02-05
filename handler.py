@@ -562,5 +562,6 @@ class HandlerGUI(object):
 
 
 root = tk.Tk()
-# hf is the name of the Conda environment
-my_gui = HandlerGUI(root, "tt")
+
+conda_env_name = "handwritten-flowchart-recog"
+my_gui = HandlerGUI(root, conda_env_name)
