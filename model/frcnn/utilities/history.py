@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from keras.utils.vis_utils import plot_model
 import json
 

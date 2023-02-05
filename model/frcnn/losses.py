@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from keras import backend as K
 from keras.objectives import categorical_crossentropy
 import tensorflow as tf
