@@ -1,6 +1,6 @@
+import tensorflow as tf
 from keras import backend as K
 from keras.objectives import categorical_crossentropy
-import tensorflow as tf
 
 
 class LossesCalculator(object):

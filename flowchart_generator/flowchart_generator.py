@@ -1,11 +1,10 @@
 import sys
-import os
 
 from graphviz import Digraph
 
 sys.path.append('..')
-from node import Node
 from graph import Graph
+from node import Node
 
 
 class FlowchartGenerator(object):

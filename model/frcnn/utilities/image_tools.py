@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 class ImageTools(object):
 	"""Methods for get required format to the images."""
 

@@ -1,10 +1,11 @@
-import numpy as np
-import pdb
-import math
 import copy
+import math
+import pdb
 
-from . data_generator import Metrics
-from . utilities.image_tools import ImageTools
+import numpy as np
+
+from .data_generator import Metrics
+from .utilities.image_tools import ImageTools
 
 
 class ROIHelpers(object):

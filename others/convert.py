@@ -1,4 +1,5 @@
 import os
+
 dataset_path = "flowchart-3b"
 dataset = os.listdir(dataset_path)
 for class_i in dataset:

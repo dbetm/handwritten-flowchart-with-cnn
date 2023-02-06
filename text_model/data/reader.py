@@ -1,15 +1,14 @@
 """Dataset reader and process"""
 
 import os
-import html
 import string
-import xml.etree.ElementTree as ET
+from functools import partial
+from multiprocessing import Pool
+
+import h5py
 
 from . import preproc as pp
-from functools import partial
-from glob import glob
-from multiprocessing import Pool
-import h5py
+
 new = "new_data"
 source = "iam"
 arch = "puigcerver"

@@ -1,22 +1,22 @@
 """Handwritten Text Recognition Neural Network"""
 
 import os
+from contextlib import redirect_stdout
+
 import numpy as np
 import tensorflow as tf
-
-from contextlib import redirect_stdout
-from tensorflow.keras import backend as K
 from tensorflow.keras import Model
-
-from tensorflow.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import (CSVLogger, EarlyStopping,
+                                        ModelCheckpoint, ReduceLROnPlateau,
+                                        TensorBoard)
 from tensorflow.keras.constraints import MaxNorm
+from tensorflow.keras.layers import (GRU, LSTM, Activation, Add,
+                                     BatchNormalization, Bidirectional, Conv2D,
+                                     Dense, Dropout, Input, Lambda, LeakyReLU,
+                                     MaxPooling2D, PReLU, Reshape)
 
-from . layers import FullGatedConv2D, GatedConv2D, OctConv2D
-from tensorflow.keras.layers import Conv2D, Bidirectional, LSTM, GRU, Dense
-from tensorflow.keras.layers import Dropout, BatchNormalization, LeakyReLU, PReLU
-from tensorflow.keras.layers import Input, Add, Activation, Lambda, MaxPooling2D, Reshape
-
+from .layers import FullGatedConv2D, GatedConv2D, OctConv2D
 
 """
 HTRModel Class based on:

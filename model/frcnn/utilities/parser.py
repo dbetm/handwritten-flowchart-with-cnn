@@ -1,8 +1,9 @@
+import os
+import xml.etree.ElementTree as ET
+
 import cv2
 import numpy as np
 import pandas as pd
-import os
-import xml.etree.ElementTree as ET
 
 
 class Parser(object):

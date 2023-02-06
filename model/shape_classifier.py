@@ -1,32 +1,29 @@
 from __future__ import division
+
+import copy
 import os
+import pickle
 import sys
 import time
-import copy
-import pickle
-import random
-import logging
-from optparse import OptionParser
 
 import cv2
 import numpy as np
+import tensorflow as tf
 from keras.layers import Input
 from keras.models import Model
-from keras import backend as K
-import matplotlib.pyplot as plt
-import tensorflow as tf
 
-from . frcnn.cnn import CNN
-from . frcnn.roi_helpers import ROIHelpers
-from . frcnn.data_generator import Metrics
-from . frcnn.utilities.config import Config
-from . frcnn.utilities.parser import Parser
-from . frcnn.utilities.image_tools import ImageTools
+from .frcnn.cnn import CNN
+from .frcnn.data_generator import Metrics
+from .frcnn.roi_helpers import ROIHelpers
+from .frcnn.utilities.image_tools import ImageTools
+
 sys.path.append("model")
 import frcnn
+
 sys.path.append('..')
 from node import Node
 from preprocessor import Preprocessor
+
 
 class ShapeClassifier(object):
 	"""Shape Classifier, detects elements of handwritten flowchart using a pre-

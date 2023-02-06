@@ -1,14 +1,16 @@
 import os
-import datetime
 import string
-import numpy as np
-import keras_ocr
 from math import ceil
-from . data.generator import DataGenerator
-from . network.model import HTRModel
-from . data import preproc as pp
+
 import cv2
+import keras_ocr
+import numpy as np
+
 from node import Node
+
+from .data import preproc as pp
+from .data.generator import DataGenerator
+from .network.model import HTRModel
 
 alphabet_recognition = string.printable[:95]
 alphabet_detection = string.printable[:36]
@@ -21,9 +23,10 @@ source_path = os.path.join("text_model","data_model",f"{source}.hdf5")
 output_path = os.path.join("text_model","output",source,arch)
 target_path = os.path.join(output_path,"checkpoint_weights.hdf5")
 
-from keras import backend as K
 import tensorflow as tf
+from keras import backend as K
 from tensorflow.compat.v1 import InteractiveSession
+
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
 session = InteractiveSession(config=config)

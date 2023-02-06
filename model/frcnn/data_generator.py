@@ -1,14 +1,14 @@
 from __future__ import absolute_import
-import numpy as np
-import cv2
-import random
-import copy
-import threading
-import itertools
-import traceback
 
-from . data_augment import DataAugment
-from . utilities.image_tools import ImageTools
+import itertools
+import random
+import threading
+
+import cv2
+import numpy as np
+
+from .data_augment import DataAugment
+from .utilities.image_tools import ImageTools
 
 
 class Metrics(object):

@@ -1,28 +1,26 @@
 from __future__ import division
-import random
+
+import logging
+import pickle
 import pprint
+import random
 import sys
 import time
-import pickle
-import logging
-import traceback
-from optparse import OptionParser
 
 import numpy as np
 import tensorflow as tf
-from keras import backend as K
-from keras.optimizers import Adam, SGD, RMSprop
 from keras.layers import Input
 from keras.models import Model
+from keras.optimizers import Adam
 from keras.utils import generic_utils
 
-from frcnn.data_generator import Metrics, Utils
+from frcnn.cnn import CNN
+from frcnn.data_generator import Utils
 from frcnn.losses import LossesCalculator
 from frcnn.roi_helpers import ROIHelpers
-from frcnn.cnn import CNN
 from frcnn.utilities.config import Config
-from frcnn.utilities.parser import Parser
 from frcnn.utilities.history import History
+from frcnn.utilities.parser import Parser
 
 
 class Trainer(object):

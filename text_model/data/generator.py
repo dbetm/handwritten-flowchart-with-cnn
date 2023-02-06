@@ -3,13 +3,15 @@ Uses generator functions to supply train/test with data.
 Image renderings and text are created on the fly each time.
 """
 
+import os
+import unicodedata
 from itertools import groupby
-from . import preproc as pp
+
 import h5py
 import numpy as np
-import unicodedata
-import cv2
-import os
+
+from . import preproc as pp
+
 source = "iam"
 new = "new_data"
 new_source_path = os.path.join("text_model","data_model",f"{new}.hdf5")
