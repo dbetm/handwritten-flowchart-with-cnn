@@ -1,8 +1,11 @@
+import os
+
 from graph import Graph
 from node import Node
-import os
+
+
 class CodeGenerator(object):
-    def __init__(self,graph,file_path):
+    def __init__(self,graph: Graph, file_path: str):
         self.FILE_PATH = "results/"+file_path+"code.c"
         self.adj_list = graph.get_adyacency_list()
         self.nodes = graph.get_nodes()

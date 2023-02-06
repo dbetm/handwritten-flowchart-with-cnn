@@ -1,26 +1,24 @@
 import os
-import cv2
-import sys
-import time
 import pickle
 import random
+import time
 
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import matplotlib.pyplot as plt
-from keras import backend as K
 from keras.layers import Input
 from keras.models import Model
-from sklearn.metrics import average_precision_score
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import (average_precision_score, classification_report,
+                             confusion_matrix)
 
 from frcnn.cnn import CNN
-from frcnn.roi_helpers import ROIHelpers
 from frcnn.data_generator import Metrics
+from frcnn.roi_helpers import ROIHelpers
 from frcnn.utilities.config import Config
-from frcnn.utilities.parser import Parser
 from frcnn.utilities.image_tools import ImageTools
+from frcnn.utilities.parser import Parser
 
 
 class Report(object):

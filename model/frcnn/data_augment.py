@@ -1,9 +1,10 @@
 import copy
-import cv2
-import numpy as np
-import imutils
 import logging
 import sys
+
+import cv2
+import imutils
+import numpy as np
 
 
 class DataAugment(object):

@@ -1,7 +1,9 @@
-import cv2
-import numpy as np
 import copy
+
+import cv2
 import imutils
+import numpy as np
+
 
 class DataAugmentation(object):
 	"""docstring for DataAugmentation."""

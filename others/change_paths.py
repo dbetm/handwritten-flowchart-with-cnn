@@ -1,6 +1,6 @@
 import os
-import shutil
 import xml.etree.ElementTree as ET
+
 dataset_path = "flowchart-3b"
 
 

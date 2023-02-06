@@ -1,7 +1,7 @@
-from parser import Parser
 import random
-import cv2
+from parser import Parser
 
+import cv2
 from image_tools import ImageTools
 
 

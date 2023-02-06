@@ -2,11 +2,12 @@
 recognition, allows train an architecture that use CNNs and measure the same.
 """
 
-import os
 import json
+import os
 
-from train import Trainer
 from report import Report
+from train import Trainer
+
 
 class ShapeModel(object):
 	"""ShapeModel allows to start and manager the training and test process

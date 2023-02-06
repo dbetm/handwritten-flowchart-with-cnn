@@ -1,23 +1,19 @@
-import os
 import json
-import sys
-
+import os
 import tkinter as tk
-from tkinter import ttk
-from tkinter import Checkbutton, IntVar
-from tkinter import filedialog
-from tkinter import messagebox
+from tkinter import Checkbutton, IntVar, filedialog, messagebox, ttk
 from tkinter.ttk import Style
-from PIL import ImageTk, Image
-import cv2
 
-from node import Node
-from graph import Graph
+import cv2
+from PIL import Image, ImageTk
+
 from codeGenerator import CodeGenerator
+from flowchart_generator.flowchart_generator import FlowchartGenerator
+from graph import Graph
+from model.shape_classifier import ShapeClassifier
 from text_model.data.reader import Dataset
 from text_model.text_classifier import TextClassifier
-from model.shape_classifier import ShapeClassifier
-from flowchart_generator.flowchart_generator import FlowchartGenerator
+
 new = "new_data"
 new_source_path = os.path.join("text_model","data_model",f"{new}.hdf5")
 class VerticalScrolledFrame(tk.Frame):

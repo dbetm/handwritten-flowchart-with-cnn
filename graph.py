@@ -1,6 +1,9 @@
 import math
+
 import cv2
+
 from node import Node
+
 
 class Graph(object):
 

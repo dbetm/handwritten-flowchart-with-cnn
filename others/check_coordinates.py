@@ -1,6 +1,8 @@
 import os
-import cv2
 import xml.etree.ElementTree as ET
+
+import cv2
+
 dataset_path = "flowchart-3b"
 
 dataset = os.listdir(dataset_path)

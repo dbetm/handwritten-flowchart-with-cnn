@@ -11,13 +11,14 @@ Data preproc functions:
     text_standardize: preprocess and standardize sentence
 """
 
-import re
-import os
-import cv2
 import html
+import os
+import re
 import string
-import numpy as np
+
+import cv2
 import numba as nb
+import numpy as np
 
 
 def adjust_to_see(img):

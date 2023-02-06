@@ -1,5 +1,7 @@
-from keras.utils.vis_utils import plot_model
 import json
+
+from keras.utils.vis_utils import plot_model
+
 
 class History(object):
     """The results of the training persist, as well as its hyperparameters."""

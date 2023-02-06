@@ -1,6 +1,6 @@
+import argparse
 import os
 import shutil
-import argparse
 from random import randint
 
 dataset_path = "/home/david/datasets/flowchart-3b"
