@@ -27,7 +27,7 @@ imageio==2.8.0
 imgaug==0.4.0
 importlib-metadata==1.6.0
 imutils==0.5.3
-joblib==0.14.1
+joblib==1.2.0
 Keras==2.3.1
 Keras-Applications==1.0.8
 keras-ocr==0.8.3
