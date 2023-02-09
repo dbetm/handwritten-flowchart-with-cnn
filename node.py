@@ -1,12 +1,13 @@
 class Node(object):
     """Node represents a simple element of the flowchart."""
 
-    def __init__(self,coordinate,text=None,class_shape=None,image_path=None):
+    def __init__(self, coordinate, text=None, class_shape=None, image_path=None):
         self.coordinate = coordinate
         self.text = text
         self.class_shape = class_shape
         self.image_path = image_path
-    def collapse(self,node):
+
+    def collapse(self, node):
         xmin_A,xmax_A,ymin_A,ymax_A = self.get_coordinate()
         xmin_B,xmax_B,ymin_B,ymax_B = node.get_coordinate()
         n_xmin = min(xmin_A,xmin_B)
@@ -14,9 +15,9 @@ class Node(object):
         n_ymin = min(ymin_A,ymin_B)
         n_ymax = max(ymax_A,ymax_B)
         self.set_coordinate([n_xmin,n_xmax,n_ymin,n_ymax])
+
     def get_coordinate(self):
         """Returns a tuple (x1, x2, y1, y2)."""
-
         return self.coordinate
 
     def get_text(self):
@@ -24,7 +25,6 @@ class Node(object):
 
     def get_class(self):
         """Return class of shape."""
-
         return self.class_shape
 
     def set_coordinate(self,coordinate):
