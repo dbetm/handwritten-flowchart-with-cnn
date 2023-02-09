@@ -13,7 +13,7 @@ class Preprocessor(object):
 
     @staticmethod
     def to_gray_scale(image):
-        """Return the image in gray scales."""
+        """Return the image in gray scale."""
 
         # Converting color image to grayscale image
         res = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -21,8 +21,7 @@ class Preprocessor(object):
 
     @staticmethod
     def apply_unsharp_masking(image):
-        """ Improve a bit the image for emphasize texture and details.
-        """
+        """ Improve a bit the image for emphasize texture and details."""
 
         img = Preprocessor.to_gray_scale(image)
 
@@ -32,6 +31,7 @@ class Preprocessor(object):
         beta = 1.0 - alpha
         res = cv2.addWeighted(img, alpha, blur, beta, 0.0)
         return res
+
     @staticmethod
     def resize_new_data(image,input_size):
         def get_max_min(image):
@@ -44,6 +44,7 @@ class Preprocessor(object):
                         argmax = max(i,argmax)
                         argmin = min(i,argmin)
             return argmax,argmin
+
         def image_resize(image,height = None,inter = cv2.INTER_AREA):
             dim = None
             (h, w) = image.shape
@@ -51,6 +52,7 @@ class Preprocessor(object):
             dim = (int(w * r),height)
             resized = cv2.resize(image,dim,interpolation = inter)
             return resized
+
         image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(image,(3,3),0)
         ret,image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY + cv2.THRESH_OTSU)
