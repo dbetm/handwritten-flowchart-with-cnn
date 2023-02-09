@@ -7,7 +7,7 @@ from tkinter.ttk import Style
 import cv2
 from PIL import Image, ImageTk
 
-from codeGenerator import CodeGenerator
+from code_generator import CodeGenerator
 from flowchart_generator.flowchart_generator import FlowchartGenerator
 from graph import Graph
 from model.shape_classifier import ShapeClassifier
@@ -424,7 +424,7 @@ class HandlerGUI(object):
             window.update()
         graph = Graph(text_nodes,shape_nodes)
         flow = graph.generate_graph()
-        #call function to traslate to code and flowchart
+        # call function to traslate to code and flowchart
         results_path = self.__get_results_path()
         os.mkdir(self.RESULTS_PATH+results_path)
         cg = CodeGenerator(graph,results_path)
