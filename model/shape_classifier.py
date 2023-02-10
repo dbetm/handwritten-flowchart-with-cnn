@@ -152,11 +152,21 @@ class ShapeClassifier(object):
 			ratio
 		)
 		if(display_image):
-			cv2.imshow('test', cv2.resize(img,(0,0), fx=0.4, fy=0.4))
-			cv2.waitKey(0)
-			cv2.destroyAllWindows()
+			self.__display_image(img, "Shapes detection")
 
 		return self.generate_nodes(all_dets)
+	
+	def __display_image(self, image, window_name: str):
+		cv2.namedWindow(window_name, cv2.WINDOW_KEEPRATIO)
+		cv2.imshow(window_name, cv2.resize(image,(0,0),fx=0.5, fy=0.5))
+
+		wait_time = 1000
+        # close the window image when the user press q or click at X button.
+		while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
+			keyCode = cv2.waitKey(wait_time)
+			if (keyCode & 0xFF) == ord("q"):
+				cv2.destroyAllWindows()
+				break
 
 	def __load_config(self, results_path):
 		"""Open .pickle file that contains configuration params of Faster

@@ -195,9 +195,21 @@ class TextClassifier(object):
             xmin,xmax,ymin,ymax = box
             pts = np.array([[xmin,ymin], [xmax,ymin],[xmax,ymax],[xmin,ymax]], np.int32)
             cv2.polylines(img=image,pts=np.int32([pts]),color=(255, 0, 0),thickness=5,isClosed=True)
-        cv2.imshow("image",cv2.resize(image,(0, 0),fx = 0.3, fy = 0.3))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        
+        self.__display_image(image, "Text detection")
+        
+    def __display_image(self, image, window_name: str):
+        cv2.namedWindow(window_name, cv2.WINDOW_KEEPRATIO)
+        cv2.imshow(window_name, cv2.resize(image,(0,0),fx=0.3, fy=0.3))
+
+        wait_time = 1000
+        # close the window image when the user press q or click at X button.
+        while cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
+            keyCode = cv2.waitKey(wait_time)
+            if (keyCode & 0xFF) == ord("q"):
+                cv2.destroyAllWindows()
+                break
+
     def __image_generator(self,image):
         x_predict = pp.resize_new_data(image,input_size[:2])
         x_predict = np.array([x_predict])

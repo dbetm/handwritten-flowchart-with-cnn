@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import tkinter as tk
@@ -520,13 +521,15 @@ class HandlerGUI(object):
                 #Text predict(text value)
                 #[Node..........]
             sc = ShapeClassifier(results_path = model,
-            use_gpu=use_gpu,
-            num_rois=num_rois,
-            bbox_threshold=0.51,
-            overlap_thresh_1=0.9,
-            overlap_thresh_2=0.2)
-            shape_nodes = sc.predict(image,display_image=True)
+            use_gpu = use_gpu,
+            num_rois = num_rois,
+            bbox_threshold = 0.51,
+            overlap_thresh_1 = 0.9,
+            overlap_thresh_2 = 0.2)
+            print("Detecting the shapes and connectors...")
+            shape_nodes = sc.predict(image, display_image=True)
             #build the graph
+            print("Detecting text")
             self.tc = TextClassifier()
             text_nodes = self.tc.recognize(image_path)
             window.destroy()
@@ -558,13 +561,13 @@ class HandlerGUI(object):
                 break
             code_panel.insert(tk.INSERT,line)
         code_panel.config(state=tk.DISABLED)
-        #image
+        # Image
         img = Image.open("results/"+results_path+"flowchart.png")
         img = img.resize((400,500), Image.ANTIALIAS)
         imgL = ImageTk.PhotoImage(img)
         panel = tk.Label(window, image=imgL)
         panel.image = imgL
-        panel.pack(side = tk.LEFT)
+        panel.pack(side=tk.LEFT)
         # Compile code source
         filepath = 'results/' + results_path + "code.c"
         objectpath = 'results/' + results_path + 'code.o'
@@ -574,5 +577,13 @@ class HandlerGUI(object):
 
 root = tk.Tk()
 
-conda_env_name = "handwritten-flowchart-recog"
+# get input args
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--env", type=str, required=False, default="handwritten-flowchart-recog"
+)
+args = parser.parse_args()
+
+conda_env_name = args.env
+print(f"Using Conda env: {conda_env_name}")
 my_gui = HandlerGUI(root, conda_env_name)

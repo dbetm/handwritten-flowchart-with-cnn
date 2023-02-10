@@ -25,10 +25,14 @@ Finally, the outputs are the generated source code in C, its compilation output 
         - `checkpoint_weights.hdf5` (38.5 MB) paste into `text_model/output/iam/puigcerver/`
 
 ## Usage
-1. Please, activate your Conda enviroment. 
+1. Please, activate your Conda enviroment. `$ conda activate handwritten-flowchart-recog`
 2. Move to inside repository folder, example: `$ cd handwritten-flowchart-with-cnn`
-3. Type: ```$ python3 handler.py ```
+3. Type: ```$ python3 handler.py ```. Alternatively you can pass the Conda env. name: `$ python3 handler.py --env another-conda-env`
 4. Use "Recognize flowchart" option to process a handwritten flowchart.
+5. Click at "Predict" button.
+6. A window with the **shape** detection will appear. You can close it pressing 'q' key or using the X button.
+7. A window with the **text** detection will appear. You can close it pressing 'q' key or using the X button.
+8. The final results will be saved on `results/results_x`.
 
 ### Some examples of the results
 ![example 1](https://github.com/dbetm/handwritten-flowchart-with-cnn/blob/master/Images/some_results/fibo.png "Fibonacci sequence")
@@ -47,7 +51,7 @@ A paper was written in 2022 and published on International Journal of Computer A
 ------
 
 ## Extra
-Would you like to download the training dataset? [Link](https://www.kaggle.com/davbetm/flowchart-3b)
+Would you like to download the training dataset? [Link to Kaggle](https://www.kaggle.com/davbetm/flowchart-3b). On Kaggle you will find details about it.
 
 Please cite the dataset with:
 
