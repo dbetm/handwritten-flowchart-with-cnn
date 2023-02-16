@@ -81,6 +81,6 @@ tornado==6.0.4
 tqdm==4.46.0
 urllib3==1.26.5
 validators==0.15.0
-Werkzeug==1.0.1
+Werkzeug==2.2.3
 wrapt==1.12.1
 zipp==3.1.0
