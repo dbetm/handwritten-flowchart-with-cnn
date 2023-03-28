@@ -50,7 +50,7 @@ A paper was written in 2022 and published on International Journal of Computer A
 
 ------
 
-## Extra
+## Dataset
 Would you like to download the training dataset? [Link to Kaggle](https://www.kaggle.com/davbetm/flowchart-3b). On Kaggle you will find details about it.
 
 Please cite the dataset with:
@@ -63,6 +63,6 @@ Please cite the dataset with:
 - Publisher Location: Zacatecas, Mexico.
 - Electronic Retrieval Location: https://www.kaggle.com/davbetm/flowchart-3b
 
+## Notes
 
-
-
+- This project was finished on July 2020 as a final school project, since then, only minor fixes and improvements have happened.
