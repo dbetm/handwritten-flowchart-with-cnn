@@ -11,7 +11,7 @@ Finally, the outputs are the generated source code in C, its compilation output 
 **Note**: Flowcharts used for testing are constructed with a defined shape-connector set. You can check it [here](https://github.com/dbetm/handwritten-flowchart-with-cnn/tree/master/model/set_shapes.png).
 
 ## Set up for testing detections
-1. Create a virtual environment (venv) with Conda with name `handwritten-flowchart-recog`.
+1. Create a virtual environment (venv) with Conda with name `handwritten-flowchart-recog`. The project was tested on Python 3.6 and Python 3.7. So, consider to use the same version.
 2. Download / clone this repo.
 3. Acivate the new venv, move to the project directory and install the requirements: `$ pip install -r requirements.txt`
 4. Shapes-connectors model:
