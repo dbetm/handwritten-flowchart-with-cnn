@@ -137,3 +137,7 @@ annotate.txt
 
 # Training results
 training_results/
+
+
+# Misc
+.DS_Store
