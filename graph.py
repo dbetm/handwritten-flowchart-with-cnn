@@ -1,8 +1,8 @@
 import math
 
-import cv2
 
-from node import Node
+TEXTS_FOR_START_STATE = {"inicio", "start"}
+TEXTS_FOR_END_STATE = {"fin", "final", "end"}
 
 
 class Graph(object):
@@ -38,7 +38,7 @@ class Graph(object):
         w = min(coordinateA[1], coordinateB[1]) - x
         h = min(coordinateA[3], coordinateB[3]) - y
         if w < 0 or h < 0:
-        	return False
+            return False
         return True
 
 
@@ -119,7 +119,10 @@ class Graph(object):
 
     def find_first_state(self):
         for node in self.nodes:
-            if(node.get_class() == "start_end" and node.get_text().lower() == "inicio"):
+            if(
+                node.get_class() == "start_end"
+                and node.get_text().lower() in TEXTS_FOR_START_STATE
+            ):
                 return self.nodes.index(node)
         return -1
 
@@ -132,7 +135,7 @@ class Graph(object):
     def __can_visit(self,previous_node,node_index):
         if(self.nodes[node_index].get_class() == "decision"):
             return self.visited_list[node_index] <= 1 and not(previous_node in self.adj_list[node_index])
-        elif(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text().lower() == "fin"):
+        elif(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text().lower() in TEXTS_FOR_END_STATE):
             return not(previous_node in self.adj_list[node_index])
         else:
             return self.visited_list[node_index] == 0 and not(previous_node in self.adj_list[node_index])
@@ -147,7 +150,7 @@ class Graph(object):
             to_compare = None
             #check only with the posibles
             #if is start end:start
-            if(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text().lower() == "inicio"):
+            if(self.nodes[node_index].get_class() == "start_end" and self.nodes[node_index].get_text().lower() in TEXTS_FOR_START_STATE):
                 for i in range(len(self.nodes)):
                     if(node_index != i and self.__can_visit(node_index,i)):
                         distance = self.__calculate_distance(self.nodes[node_index],self.nodes[i])
@@ -223,8 +226,8 @@ class Graph(object):
                         return str(node_index)+"NV"
 
     def generate_graph(self):
-        """ Generate the adyacency list of the nodes starting of the relationship of
-        the nodes. Decision shape is a special case, because can have two connectors
+        """ Generate the adjacency list of the nodes starting of the relationship of
+        the nodes. Decision shape is a special case, because it can have two connectors
         *Check the cases arrow-rectangle/arrow line.
         """
         self.nodes = self.__collapse_nodes()
@@ -233,6 +236,7 @@ class Graph(object):
         self.visited_list = [0]*len(self.nodes)
         first_state = self.find_first_state()
         if(first_state == -1):
+            print("Not valid init")
             return "Not valid init"
         if(self.__find_next(first_state) == "NV"):
             print(self.adj_list)
